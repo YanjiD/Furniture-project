@@ -3,51 +3,54 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; }
-        model-viewer { width: 100%; flex-grow: 1; }
-        .ui-panel { padding: 20px; background: white; text-align: center; border-top: 2px solid #ddd; z-index: 100; }
-        select { padding: 12px; font-size: 1rem; border-radius: 8px; width: 280px; cursor: pointer; border: 2px solid #333; }
+        body { margin: 0; background-color: #f4f4f4; font-family: sans-serif; }
+        .container { position: relative; width: 100vw; height: 80vh; }
+        
+        /* Layer 1: The Apartment Room (The Background) */
+        #room-layer {
+            position: absolute; width: 100%; height: 100%; z-index: 1;
+            pointer-events: none; /* This makes it so you can click "through" the room to move the sofa */
+        }
+        
+        /* Layer 2: The Sofa (The Interactive Part) */
+        #sofa-layer {
+            position: absolute; width: 100%; height: 100%; z-index: 2;
+            --poster-color: transparent; background-color: transparent;
+        }
+
+        .ui-panel { 
+            position: relative; height: 20vh; background: white; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-top: 2px solid #ddd; z-index: 10;
+        }
+        select { padding: 12px; font-size: 1rem; border-radius: 8px; width: 300px; border: 2px solid #333; }
     </style>
 </head>
 <body>
 
-<model-viewer id="showroom" 
-              src="Room.glb" 
-              camera-controls 
-              exposure="1.0" 
-              shadow-intensity="1" 
-              camera-orbit="45deg 75deg 10m">
+<div class="container">
+    <model-viewer id="room-layer" src="Room.glb" exposure="1" shadow-intensity="0"></model-viewer>
     
-    <div class="ui-panel">
-        <label><b>Place Sofa in Apartment:</b></label><br><br>
-        <select id="sofa-select">
-            <option value="Room.glb">-- Empty Room --</option>
-            <option value="Sofa1.glb">Configuration 1: Sectional</option>
-            <option value="Sofa2.glb">Configuration 2: Grey Fabric</option>
-            <option value="Sofa3.glb">Configuration 3: Modern</option>
-            <option value="Sofa4.glb">Configuration 4: Vintage</option>
-            <option value="Sofa5.glb">Configuration 5: Office</option>
-        </select>
-    </div>
-</model-viewer>
+    <model-viewer id="sofa-layer" src="Sofa1.glb" camera-controls shadow-intensity="1" exposure="1.2" camera-orbit="45deg 75deg 5m"></model-viewer>
+</div>
+
+<div class="ui-panel">
+    <label><b>Experiment: Place Sofa in Apartment</b></label><br>
+    <select id="sofa-select">
+        <option value="Sofa1.glb">Configuration 1: Sectional</option>
+        <option value="Sofa2.glb">Configuration 2: Grey Fabric</option>
+        <option value="Sofa3.glb">Configuration 3: Modern</option>
+        <option value="Sofa4.glb">Configuration 4: Vintage</option>
+        <option value="Sofa5.glb">Configuration 5: Office</option>
+    </select>
+</div>
 
 <script>
-    const modelViewer = document.querySelector("#showroom");
-    const select = document.querySelector("#sofa-select");
-
-    select.addEventListener('change', async (event) => {
-        const sofaSrc = event.target.value;
-        
-        if (sofaSrc === "Room.glb") {
-            modelViewer.src = "Room.glb"; // Reset to empty room
-        } else {
-            // This 'swaps' the view, but we use the Room as the Environment
-            // so the sofa appears to be surrounded by the apartment walls.
-            modelViewer.src = sofaSrc;
-            modelViewer.environmentImage = "Room.glb";
-            modelViewer.skyboxImage = "Room.glb";
-        }
+    const sofaViewer = document.querySelector("#sofa-layer");
+    document.querySelector("#sofa-select").addEventListener('change', (e) => {
+        sofaViewer.src = e.target.value; 
     });
 </script>
+
 </body>
 </html>
