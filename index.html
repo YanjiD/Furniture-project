@@ -3,108 +3,96 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #333; font-family: sans-serif; color: white; }
-        .scene-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: #444; color: white; font-family: sans-serif; }
+        .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
-        /* Room Layer (Background) */
-        #room {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-        }
+        /* Room is the anchor */
+        #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        /* Sofa Layer (Foreground) */
-        #sofa {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
-            pointer-events: none; /* Lets you rotate the room with your mouse */
-        }
+        /* Sofa floats on top */
+        #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-        /* The Calibration Panel */
-        .controls {
-            position: absolute; bottom: 20px; left: 20px; z-index: 100;
-            background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 8px;
-            width: 300px;
+        .dev-panel {
+            position: absolute; bottom: 10px; left: 10px; z-index: 100;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
         }
-        label { display: block; margin-top: 10px; font-size: 12px; }
-        input[type=range] { width: 100%; }
-        select { width: 100%; padding: 5px; margin-bottom: 10px; }
+        input[type=range] { width: 100%; margin-bottom: 10px; }
+        label { font-size: 12px; color: #aaa; }
+        .value-display { float: right; color: #0f0; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="scene-container">
-    <model-viewer id="room" src="Room.glb" camera-controls exposure="1" shadow-intensity="1"></model-viewer>
+<div class="scene-wrapper">
+    <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1"></model-viewer>
     
-    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" shadow-intensity="0"></model-viewer>
+    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
 </div>
 
-<div class="controls">
-    <h3>🛋️ Fit Calibrator</h3>
-    
-    <select id="sofa-selector">
-        <option value="Sofa1.glb">Configuration 1</option>
-        <option value="Sofa2.glb">Configuration 2</option>
-        <option value="Sofa3.glb">Configuration 3</option>
-        <option value="Sofa4.glb">Configuration 4</option>
+<div class="dev-panel">
+    <h3>🛠️ Developer Calibration</h3>
+    <p style="font-size: 11px; margin-top:-10px;">Adjust these until the sofa sits on the floor. Write down the numbers!</p>
+
+    <label>Choose Sofa:</label>
+    <select id="selector" style="width:100%; padding:5px; margin-bottom:10px;">
+        <option value="Sofa1.glb">Sofa 1</option>
+        <option value="Sofa2.glb">Sofa 2</option>
+        <option value="Sofa3.glb">Sofa 3</option>
+        <option value="Sofa4.glb">Sofa 4</option>
+        <option value="Sofa5.glb">Sofa 5</option>
     </select>
 
-    <label>Size (Scale): <span id="scale-val">1.0</span></label>
-    <input type="range" id="scale" min="0.01" max="10" step="0.01" value="1">
+    <label>Scale (Size) <span id="val-scale" class="value-display">1.0</span></label>
+    <input type="range" id="inp-scale" min="0.01" max="5" step="0.01" value="1">
 
-    <label>Move Left/Right (X): <span id="x-val">0</span>m</label>
-    <input type="range" id="posX" min="-10" max="10" step="0.1" value="0">
-
-    <label>Move Up/Down (Y): <span id="y-val">0</span>m</label>
-    <input type="range" id="posY" min="-10" max="10" step="0.1" value="0">
-
-    <label>Move Forward/Back (Z): <span id="z-val">0</span>m</label>
-    <input type="range" id="posZ" min="-10" max="10" step="0.1" value="0">
+    <label>Vertical Height (Y) <span id="val-y" class="value-display">0m</span></label>
+    <input type="range" id="inp-y" min="-5" max="5" step="0.1" value="0">
+    
+    <label>Forward/Back (Z) <span id="val-z" class="value-display">0m</span></label>
+    <input type="range" id="inp-z" min="-10" max="10" step="0.1" value="0">
 </div>
 
 <script>
     const room = document.querySelector('#room');
     const sofa = document.querySelector('#sofa');
     
-    // Sync Cameras: When you move the Room, the Sofa moves with it
-    room.addEventListener('camera-change', (e) => {
+    // Sync rotation
+    room.addEventListener('camera-change', () => {
         sofa.cameraOrbit = room.cameraOrbit;
         sofa.fieldOfView = room.fieldOfView;
     });
 
-    // Update Sofa Model
-    document.querySelector('#sofa-selector').addEventListener('change', (e) => {
-        sofa.src = e.target.value;
-    });
+    // Inputs
+    const sel = document.querySelector('#selector');
+    const scaleInp = document.querySelector('#inp-scale');
+    const yInp = document.querySelector('#inp-y');
+    const zInp = document.querySelector('#inp-z');
 
-    // --- CALIBRATION LOGIC ---
-    const scaleInput = document.querySelector('#scale');
-    const xInput = document.querySelector('#posX');
-    const yInput = document.querySelector('#posY');
-    const zInput = document.querySelector('#posZ');
-
-    function updateTransform() {
-        const s = scaleInput.value;
-        const x = xInput.value;
-        const y = yInput.value;
-        const z = zInput.value;
+    // Update Function
+    function update() {
+        const s = scaleInp.value;
+        const y = yInp.value; 
+        const z = zInp.value;
 
         // Apply Scale
         sofa.scale = `${s} ${s} ${s}`;
         
-        // Apply Position (X Y Z)
-        // We use a custom attribute style or manipulating the model directly is hard in pure HTML
-        // So we cheat by moving the CAMERA target of the sofa slightly to offset it visually
-        // OR better: we use the 'position' attribute if supported, or transform via CSS? 
-        // No, model-viewer supports 'scale' but 'position' is tricky without Scene Graph API.
-        
-        // Simpler Fix for Position: We just accept scale for now. 
-        // If you need position, we have to use the more complex API.
-        // Let's stick to SCALE first as that is likely 90% of your problem.
-        
-        document.querySelector('#scale-val').innerText = s;
+        // Apply Position Hack: We move the CAMERA TARGET.
+        // If we want sofa to go DOWN, we look LOWER (negative Y).
+        // If we want sofa to go BACK, we look deeper (Z).
+        sofa.cameraTarget = `0m ${y}m ${z}m`;
+
+        // Update Text
+        document.querySelector('#val-scale').innerText = s;
+        document.querySelector('#val-y').innerText = y + 'm';
+        document.querySelector('#val-z').innerText = z + 'm';
     }
 
-    scaleInput.addEventListener('input', updateTransform);
-    // Note: Moving X/Y/Z on a raw .glb inside model-viewer requires more complex JS. 
-    // Start with SCALE. If the size is right, it often snaps to the center (0,0,0).
+    // Listeners
+    scaleInp.addEventListener('input', update);
+    yInp.addEventListener('input', update);
+    zInp.addEventListener('input', update);
+    sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
 </script>
 </body>
 </html>
