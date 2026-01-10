@@ -3,96 +3,91 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #444; color: white; font-family: sans-serif; }
+        body { margin: 0; background: #333; color: white; font-family: sans-serif; }
         .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
-        /* Room is the anchor */
         #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        
-        /* Sofa floats on top */
         #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
         .dev-panel {
             position: absolute; bottom: 10px; left: 10px; z-index: 100;
             background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
+            max-height: 90vh; overflow-y: auto;
         }
-        input[type=range] { width: 100%; margin-bottom: 10px; }
-        label { font-size: 12px; color: #aaa; }
-        .value-display { float: right; color: #0f0; font-weight: bold; }
+        input[type=range] { width: 100%; margin-bottom: 5px; }
+        label { font-size: 12px; color: #aaa; display: flex; justify-content: space-between; }
+        .val { color: #0f0; font-weight: bold; }
+        h3 { margin-top: 0; color: #ff9800; }
     </style>
 </head>
 <body>
 
 <div class="scene-wrapper">
     <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1"></model-viewer>
-    
     <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Developer Calibration</h3>
-    <p style="font-size: 11px; margin-top:-10px;">Adjust these until the sofa sits on the floor. Write down the numbers!</p>
+    <h3>🛠️ Calibrator v2.0</h3>
+    <p style="font-size:11px; margin-top:-10px;">Find X, Y, Z, and Scale. Write them down!</p>
 
     <label>Choose Sofa:</label>
-    <select id="selector" style="width:100%; padding:5px; margin-bottom:10px;">
+    <select id="selector" style="width:100%; padding:5px; margin-bottom:15px;">
         <option value="Sofa1.glb">Sofa 1</option>
-        <option value="Sofa2.glb">Sofa 2</option>
+        <option value="Sofa2.glb">Sofa 2 (Check Height!)</option>
         <option value="Sofa3.glb">Sofa 3</option>
         <option value="Sofa4.glb">Sofa 4</option>
         <option value="Sofa5.glb">Sofa 5</option>
     </select>
 
-    <label>Scale (Size) <span id="val-scale" class="value-display">1.0</span></label>
+    <label>Scale (Size) <span id="val-scale" class="val">1.0</span></label>
     <input type="range" id="inp-scale" min="0.01" max="5" step="0.01" value="1">
 
-    <label>Vertical Height (Y) <span id="val-y" class="value-display">0m</span></label>
-    <input type="range" id="inp-y" min="-5" max="5" step="0.1" value="0">
+    <label>Horizontal (X) <span id="val-x" class="val">0m</span></label>
+    <input type="range" id="inp-x" min="-10" max="10" step="0.1" value="0">
+
+    <label>Vertical Height (Y) <span id="val-y" class="val">0m</span></label>
+    <input type="range" id="inp-y" min="-20" max="20" step="0.1" value="0">
     
-    <label>Forward/Back (Z) <span id="val-z" class="value-display">0m</span></label>
-    <input type="range" id="inp-z" min="-10" max="10" step="0.1" value="0">
+    <label>Forward/Back (Z) <span id="val-z" class="val">0m</span></label>
+    <input type="range" id="inp-z" min="-20" max="20" step="0.1" value="0">
 </div>
 
 <script>
     const room = document.querySelector('#room');
     const sofa = document.querySelector('#sofa');
     
-    // Sync rotation
     room.addEventListener('camera-change', () => {
         sofa.cameraOrbit = room.cameraOrbit;
         sofa.fieldOfView = room.fieldOfView;
     });
 
-    // Inputs
-    const sel = document.querySelector('#selector');
-    const scaleInp = document.querySelector('#inp-scale');
-    const yInp = document.querySelector('#inp-y');
-    const zInp = document.querySelector('#inp-z');
+    const inputs = {
+        sel: document.querySelector('#selector'),
+        scale: document.querySelector('#inp-scale'),
+        x: document.querySelector('#inp-x'),
+        y: document.querySelector('#inp-y'),
+        z: document.querySelector('#inp-z')
+    };
 
-    // Update Function
     function update() {
-        const s = scaleInp.value;
-        const y = yInp.value; 
-        const z = zInp.value;
+        const s = inputs.scale.value;
+        const x = inputs.x.value;
+        const y = inputs.y.value; 
+        const z = inputs.z.value;
 
-        // Apply Scale
         sofa.scale = `${s} ${s} ${s}`;
-        
-        // Apply Position Hack: We move the CAMERA TARGET.
-        // If we want sofa to go DOWN, we look LOWER (negative Y).
-        // If we want sofa to go BACK, we look deeper (Z).
-        sofa.cameraTarget = `0m ${y}m ${z}m`;
+        // Apply X, Y, Z to camera target
+        sofa.cameraTarget = `${x}m ${y}m ${z}m`;
 
-        // Update Text
         document.querySelector('#val-scale').innerText = s;
+        document.querySelector('#val-x').innerText = x + 'm';
         document.querySelector('#val-y').innerText = y + 'm';
         document.querySelector('#val-z').innerText = z + 'm';
     }
 
-    // Listeners
-    scaleInp.addEventListener('input', update);
-    yInp.addEventListener('input', update);
-    zInp.addEventListener('input', update);
-    sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
+    Object.values(inputs).forEach(el => el.addEventListener('input', update));
+    inputs.sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
 </script>
 </body>
 </html>
