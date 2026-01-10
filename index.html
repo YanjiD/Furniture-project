@@ -5,56 +5,49 @@
     <style>
         body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; }
         model-viewer { width: 100%; flex-grow: 1; }
-        .ui-panel { padding: 15px; background: white; text-align: center; border-top: 2px solid #ddd; }
-        select { padding: 10px; font-size: 1rem; border-radius: 5px; width: 250px; cursor: pointer; }
+        .ui-panel { padding: 20px; background: white; text-align: center; border-top: 2px solid #ddd; z-index: 100; }
+        select { padding: 12px; font-size: 1rem; border-radius: 8px; width: 280px; cursor: pointer; border: 2px solid #333; }
     </style>
 </head>
 <body>
 
 <model-viewer id="showroom" 
               src="Room.glb" 
-              camera-controls
-              exposure="1.2"
-              shadow-intensity="1"
-              ar
-              style="background-color: #cccccc;">
+              camera-controls 
+              exposure="1.0" 
+              shadow-intensity="1" 
+              camera-orbit="45deg 75deg 10m">
     
     <div class="ui-panel">
-        <label><b>Place Sofa in Room:</b></label><br><br>
+        <label><b>Place Sofa in Apartment:</b></label><br><br>
         <select id="sofa-select">
             <option value="Room.glb">-- Empty Room --</option>
-            <option value="Sofa1.glb">Sofa Configuration 1</option>
-            <option value="Sofa2.glb">Sofa Configuration 2</option>
-            <option value="Sofa3.glb">Sofa Configuration 3</option>
-            <option value="Sofa4.glb">Sofa Configuration 4</option>
-            <option value="Sofa5.glb">Sofa Configuration 5</option>
+            <option value="Sofa1.glb">Configuration 1: Sectional</option>
+            <option value="Sofa2.glb">Configuration 2: Grey Fabric</option>
+            <option value="Sofa3.glb">Configuration 3: Modern</option>
+            <option value="Sofa4.glb">Configuration 4: Vintage</option>
+            <option value="Sofa5.glb">Configuration 5: Office</option>
         </select>
     </div>
 </model-viewer>
 
 <script>
-    const viewer = document.querySelector('#showroom');
-    const select = document.querySelector('#sofa-select');
+    const modelViewer = document.querySelector("#showroom");
+    const select = document.querySelector("#sofa-select");
 
-    select.addEventListener('change', async (e) => {
-        const selectedFile = e.target.value;
+    select.addEventListener('change', async (event) => {
+        const sofaSrc = event.target.value;
         
-        // This is the key: we are changing the 'src'. 
-        // NOTE: For true layering (both visible at once), 3D models usually need to be 
-        // pre-combined. However, by setting the room as the 'environment', 
-        // we can simulate the sofa being inside it.
-        viewer.src = selectedFile;
-        
-        // We re-apply the Room as the environment to the new Sofa
-        if(selectedFile !== "Room.glb") {
-            viewer.environmentImage = "Room.glb";
-            viewer.skyboxImage = "Room.glb";
+        if (sofaSrc === "Room.glb") {
+            modelViewer.src = "Room.glb"; // Reset to empty room
         } else {
-            viewer.environmentImage = null;
-            viewer.skyboxImage = null;
+            // This 'swaps' the view, but we use the Room as the Environment
+            // so the sofa appears to be surrounded by the apartment walls.
+            modelViewer.src = sofaSrc;
+            modelViewer.environmentImage = "Room.glb";
+            modelViewer.skyboxImage = "Room.glb";
         }
     });
 </script>
-
 </body>
 </html>
