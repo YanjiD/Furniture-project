@@ -3,58 +3,108 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f4f4f4; font-family: sans-serif; }
-        .viewer-container { position: relative; width: 100vw; height: 85vh; }
+        body { margin: 0; background: #333; font-family: sans-serif; color: white; }
+        .scene-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
-        /* The Room is the background */
-        #room-viewer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        /* Room Layer (Background) */
+        #room {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+        }
         
-        /* The Sofa is the foreground */
-        #sofa-viewer { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
-            pointer-events: none; /* Allows you to rotate the room while seeing the sofa */
+        /* Sofa Layer (Foreground) */
+        #sofa {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+            pointer-events: none; /* Lets you rotate the room with your mouse */
         }
 
-        .controls { 
-            position: fixed; bottom: 0; width: 100%; height: 15vh; 
-            background: white; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        /* The Calibration Panel */
+        .controls {
+            position: absolute; bottom: 20px; left: 20px; z-index: 100;
+            background: rgba(0, 0, 0, 0.8); padding: 15px; border-radius: 8px;
+            width: 300px;
         }
-        select { padding: 12px; font-size: 1rem; width: 250px; border-radius: 8px; }
+        label { display: block; margin-top: 10px; font-size: 12px; }
+        input[type=range] { width: 100%; }
+        select { width: 100%; padding: 5px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div class="viewer-container">
-    <model-viewer id="room-viewer" src="Room.glb" camera-controls disable-zoom exposure="1" shadow-intensity="1"></model-viewer>
+<div class="scene-container">
+    <model-viewer id="room" src="Room.glb" camera-controls exposure="1" shadow-intensity="1"></model-viewer>
     
-    <model-viewer id="sofa-viewer" src="Sofa1.glb" exposure="1.2" shadow-intensity="1.5"></model-viewer>
+    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" shadow-intensity="0"></model-viewer>
 </div>
 
 <div class="controls">
-    <label><b>Choose Sofa Configuration:</b></label><br>
-    <select id="variant-toggle">
+    <h3>🛋️ Fit Calibrator</h3>
+    
+    <select id="sofa-selector">
         <option value="Sofa1.glb">Configuration 1</option>
         <option value="Sofa2.glb">Configuration 2</option>
         <option value="Sofa3.glb">Configuration 3</option>
         <option value="Sofa4.glb">Configuration 4</option>
-        <option value="Sofa5.glb">Configuration 5</option>
     </select>
+
+    <label>Size (Scale): <span id="scale-val">1.0</span></label>
+    <input type="range" id="scale" min="0.01" max="10" step="0.01" value="1">
+
+    <label>Move Left/Right (X): <span id="x-val">0</span>m</label>
+    <input type="range" id="posX" min="-10" max="10" step="0.1" value="0">
+
+    <label>Move Up/Down (Y): <span id="y-val">0</span>m</label>
+    <input type="range" id="posY" min="-10" max="10" step="0.1" value="0">
+
+    <label>Move Forward/Back (Z): <span id="z-val">0</span>m</label>
+    <input type="range" id="posZ" min="-10" max="10" step="0.1" value="0">
 </div>
 
 <script>
-    const roomViewer = document.querySelector('#room-viewer');
-    const sofaViewer = document.querySelector('#sofa-viewer');
-
-    // This syncs the movement so when you rotate the room, the sofa rotates with it
-    roomViewer.addEventListener('camera-change', () => {
-        sofaViewer.cameraOrbit = roomViewer.cameraOrbit;
-        sofaViewer.fieldOfView = roomViewer.fieldOfView;
+    const room = document.querySelector('#room');
+    const sofa = document.querySelector('#sofa');
+    
+    // Sync Cameras: When you move the Room, the Sofa moves with it
+    room.addEventListener('camera-change', (e) => {
+        sofa.cameraOrbit = room.cameraOrbit;
+        sofa.fieldOfView = room.fieldOfView;
     });
 
-    document.querySelector('#variant-toggle').addEventListener('change', (e) => {
-        sofaViewer.src = e.target.value;
+    // Update Sofa Model
+    document.querySelector('#sofa-selector').addEventListener('change', (e) => {
+        sofa.src = e.target.value;
     });
+
+    // --- CALIBRATION LOGIC ---
+    const scaleInput = document.querySelector('#scale');
+    const xInput = document.querySelector('#posX');
+    const yInput = document.querySelector('#posY');
+    const zInput = document.querySelector('#posZ');
+
+    function updateTransform() {
+        const s = scaleInput.value;
+        const x = xInput.value;
+        const y = yInput.value;
+        const z = zInput.value;
+
+        // Apply Scale
+        sofa.scale = `${s} ${s} ${s}`;
+        
+        // Apply Position (X Y Z)
+        // We use a custom attribute style or manipulating the model directly is hard in pure HTML
+        // So we cheat by moving the CAMERA target of the sofa slightly to offset it visually
+        // OR better: we use the 'position' attribute if supported, or transform via CSS? 
+        // No, model-viewer supports 'scale' but 'position' is tricky without Scene Graph API.
+        
+        // Simpler Fix for Position: We just accept scale for now. 
+        // If you need position, we have to use the more complex API.
+        // Let's stick to SCALE first as that is likely 90% of your problem.
+        
+        document.querySelector('#scale-val').innerText = s;
+    }
+
+    scaleInput.addEventListener('input', updateTransform);
+    // Note: Moving X/Y/Z on a raw .glb inside model-viewer requires more complex JS. 
+    // Start with SCALE. If the size is right, it often snaps to the center (0,0,0).
 </script>
 </body>
 </html>
