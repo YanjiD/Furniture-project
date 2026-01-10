@@ -3,50 +3,39 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; }
-        model-viewer { width: 100%; flex-grow: 1; background-color: #f0f0f0; }
-        .ui-panel { 
-            padding: 20px; 
-            background: white; 
-            text-align: center; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); 
-            z-index: 10;
-        }
-        select { padding: 10px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+        body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; }
+        model-viewer { width: 100%; flex-grow: 1; }
+        .ui-panel { padding: 15px; background: white; text-align: center; border-top: 2px solid #ddd; }
+        select { padding: 10px; font-size: 1rem; border-radius: 5px; width: 250px; }
     </style>
 </head>
 <body>
 
 <model-viewer id="showroom" 
-              src="Sofa1.glb" 
+              src="sofa1.glb" 
               environment-image="Room.glb" 
               skybox-image="Room.glb" 
               camera-controls 
-              shadow-intensity="1.5" 
-              exposure="1.2">
+              auto-rotate
+              shadow-intensity="1">
     
     <div class="ui-panel">
-        <label for="sofa-select"><b>Switch Sofa Configuration:</b></label><br><br>
+        <label><b>Select Configuration:</b></label><br>
         <select id="sofa-select">
-            <option value="Sofa1.glb">Sofa Option 1</option>
-            <option value="Sofa2.glb">Sofa Option 2</option>
-            <option value="Sofa3.glb">Sofa Option 3</option>
-            <option value="Sofa4.glb">Sofa Option 4</option>
-            <option value="Sofa5.glb">Sofa Option 5</option>
-            <option value="Sofa6.glb">Sofa Option 6</option>
+            <option value="Sofa1.glb">Configuration 1</option>
+            <option value="Sofa2.glb">Configuration 2</option>
+            <option value="Sofa3.glb">Configuration 3</option>
+            <option value="Sofa4.glb">Configuration 4</option>
+            <option value="Sofa5.glb">Configuration 5</option>
         </select>
     </div>
 </model-viewer>
 
 <script>
     const viewer = document.querySelector('#showroom');
-    const select = document.querySelector('#sofa-select');
-    
-    select.addEventListener('change', (e) => {
-        // Swaps the sofa model while maintaining the virtual room background
+    document.querySelector('#sofa-select').addEventListener('change', (e) => {
         viewer.src = e.target.value; 
     });
 </script>
-
 </body>
 </html>
