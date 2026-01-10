@@ -3,92 +3,106 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; }
-        .viewer-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; }
+        body { margin: 0; background: #222; color: white; font-family: sans-serif; }
+        .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
-        /* Layer 1: The Room (Background) */
-        #room-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        
-        /* Layer 2: The Sofa (Foreground) */
-        #sofa-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-        .controls { 
-            background: white; padding: 20px; text-align: center; 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 10;
+        .dev-panel {
+            position: absolute; bottom: 10px; left: 10px; z-index: 100;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 300px;
+            max-height: 90vh; overflow-y: auto; border: 1px solid #555;
         }
-        select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 300px; cursor: pointer; }
+        input[type=range] { width: 100%; margin-bottom: 5px; cursor: pointer; }
+        label { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 5px; }
+        .val { color: #0f0; font-weight: bold; }
+        h3 { margin-top: 0; color: #ff9800; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        select { width: 100%; padding: 8px; background: #333; color: white; border: 1px solid #555; }
     </style>
 </head>
 <body>
 
-<div class="viewer-container">
-    <model-viewer id="room-layer" src="Room.glb" camera-controls disable-zoom exposure="1" shadow-intensity="1"></model-viewer>
+<div class="scene-wrapper">
+    <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1" min-field-of-view="10deg" max-field-of-view="100deg"></model-viewer>
     
-    <model-viewer id="sofa-layer" src="Sofa2.glb" exposure="1" shadow-intensity="1.5"></model-viewer>
+    <model-viewer id="sofa" src="Sofa2.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
 </div>
 
-<div class="controls">
-    <label for="config-select"><b>Select Sofa Configuration:</b></label><br><br>
-    <select id="config-select">
-        <option value="sofa2">Configuration A: Grey Fabric</option>
-        <option value="sofa4">Configuration B: Vintage Style</option>
-        <option value="sofa5">Configuration C: Office Style</option>
+<div class="dev-panel">
+    <h3>🛠️ Final Fixer</h3>
+    
+    <label>1. SELECT SOFA:</label>
+    <select id="selector">
+        <option value="Sofa2.glb">Sofa 2 (Grey Fabric)</option>
+        <option value="Sofa4.glb">Sofa 4 (Vintage)</option>
+        <option value="Sofa5.glb">Sofa 5 (Office)</option>
     </select>
+
+    <br>
+    <label>2. FIX ROOM SIZE (Zoom): <span id="val-fov" class="val">30 deg</span></label>
+    <input type="range" id="inp-fov" min="10" max="100" step="1" value="30">
+
+    <br>
+    <label>3. SOFA SIZE (Scale): <span id="val-scale" class="val">1.0</span></label>
+    <input type="range" id="inp-scale" min="0.001" max="2.0" step="0.001" value="1">
+
+    <label>Move Left/Right (X): <span id="val-x" class="val">0m</span></label>
+    <input type="range" id="inp-x" min="-10" max="10" step="0.1" value="0">
+
+    <label>Move Up/Down (Y): <span id="val-y" class="val">0m</span></label>
+    <input type="range" id="inp-y" min="-10" max="20" step="0.1" value="0">
+    
+    <label>Move Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
+    <input type="range" id="inp-z" min="-20" max="20" step="0.1" value="0">
 </div>
 
 <script>
-    // --- FINAL CALIBRATED DATA ---
-    const sofaData = {
-        // Format: position: 'Xm Ym Zm' (Left/Right, Up/Down, Forward/Back)
-        
-        'sofa2': { 
-            file: 'Sofa2.glb', 
-            scale: '0.08 0.08 0.08', 
-            position: '0m 6.0m 0m' // Set to 6.0m since you said >5. Adjust if needed.
-        },
-        
-        'sofa4': { 
-            file: 'Sofa4.glb', 
-            scale: '1.11 1.11 1.11', 
-            position: '0m 0.8m -4.7m' 
-        },
-        
-        'sofa5': { 
-            file: 'Sofa5.glb', 
-            scale: '1.08 1.08 1.08', 
-            position: '0m -0.5m -5.1m' 
-        }
-    };
-    // -----------------------------
-
-    const room = document.querySelector('#room-layer');
-    const sofa = document.querySelector('#sofa-layer');
-    const selector = document.querySelector('#config-select');
-
-    // 1. Initialize with the first sofa's settings (Sofa 2)
-    const initialData = sofaData['sofa2'];
-    sofa.scale = initialData.scale;
-    sofa.cameraTarget = initialData.position;
-
-    // 2. Sync Camera Movements (Room dictates movement)
+    const room = document.querySelector('#room');
+    const sofa = document.querySelector('#sofa');
+    
+    // Sync Camera
     room.addEventListener('camera-change', () => {
         sofa.cameraOrbit = room.cameraOrbit;
-        sofa.fieldOfView = room.fieldOfView;
+        sofa.fieldOfView = room.fieldOfView; // Sync Zoom
     });
 
-    // 3. Handle Sofa Switching
-    selector.addEventListener('change', (e) => {
-        const key = e.target.value;
-        const data = sofaData[key];
+    const inputs = {
+        sel: document.querySelector('#selector'),
+        fov: document.querySelector('#inp-fov'),
+        scale: document.querySelector('#inp-scale'),
+        x: document.querySelector('#inp-x'),
+        y: document.querySelector('#inp-y'),
+        z: document.querySelector('#inp-z')
+    };
 
-        // Change the file
-        sofa.src = data.file;
-        
-        // Apply the specific calibration for that sofa
-        sofa.scale = data.scale;
-        sofa.cameraTarget = data.position; 
+    function update() {
+        // Room Zoom
+        const fov = inputs.fov.value;
+        room.fieldOfView = fov + 'deg';
+        document.querySelector('#val-fov').innerText = fov + ' deg';
+
+        // Sofa Transforms
+        const s = inputs.scale.value;
+        const x = inputs.x.value;
+        const y = inputs.y.value; 
+        const z = inputs.z.value;
+
+        sofa.scale = `${s} ${s} ${s}`;
+        sofa.cameraTarget = `${x}m ${y}m ${z}m`;
+
+        document.querySelector('#val-scale').innerText = s;
+        document.querySelector('#val-x').innerText = x + 'm';
+        document.querySelector('#val-y').innerText = y + 'm';
+        document.querySelector('#val-z').innerText = z + 'm';
+    }
+
+    Object.values(inputs).forEach(el => el.addEventListener('input', update));
+    
+    // Reset sliders when switching sofas (optional, helps avoid jumping)
+    inputs.sel.addEventListener('change', (e) => { 
+        sofa.src = e.target.value; 
     });
 </script>
-
 </body>
 </html>
