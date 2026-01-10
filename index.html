@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        model-viewer { width: 100vw; height: 75vh; background-color: #f0f0f0; }
+        .controls-panel { 
+            height: 25vh; 
+            padding: 20px; 
+            background: white; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        select { 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc;
+            cursor: pointer;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<model-viewer id="showroom" 
+              src="sofa_3230.glb" 
+              environment-image="apartment_living_room_with_balcony.glb" 
+              skybox-image="apartment_living_room_with_balcony.glb" 
+              camera-controls 
+              enable-pan
+              shadow-intensity="1.5" 
+              exposure="1.2">
+    
+    <div class="controls-panel">
+        <label for="sofa-select"><strong>Verify Fit: Switch Sofa Configuration</strong></label><br>
+        <select id="sofa-select">
+            <option value="sofa_3230.glb">Configuration A: Modular Sectional</option>
+            <option value="sofa_grey_fabric.glb">Configuration B: Grey Fabric Sofa</option>
+            <option value="sofa.glb">Configuration C: Modern Minimalist</option>
+            <option value="soviet_sofa.glb">Configuration D: Vintage Layout</option>
+            <option value="office_sofa_-25mb.glb">Configuration E: Compact Office Style</option>
+        </select>
+    </div>
+</model-viewer>
+
+<script>
+    const viewer = document.querySelector('#showroom');
+    const select = document.querySelector('#sofa-select');
+    
+    select.addEventListener('change', (e) => {
+        // Swaps the sofa model while maintaining the apartment background
+        viewer.src = e.target.value; 
+    });
+</script>
+
+</body>
+</html>
