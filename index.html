@@ -3,91 +3,92 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #333; color: white; font-family: sans-serif; }
-        .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        .viewer-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; }
         
-        #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        /* Layer 1: The Room (Background) */
+        #room-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        
+        /* Layer 2: The Sofa (Foreground) */
+        #sofa-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-        .dev-panel {
-            position: absolute; bottom: 10px; left: 10px; z-index: 100;
-            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
-            max-height: 90vh; overflow-y: auto;
+        .controls { 
+            background: white; padding: 20px; text-align: center; 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 10;
         }
-        input[type=range] { width: 100%; margin-bottom: 5px; }
-        label { font-size: 12px; color: #aaa; display: flex; justify-content: space-between; }
-        .val { color: #0f0; font-weight: bold; }
-        h3 { margin-top: 0; color: #ff9800; }
+        select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 300px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="scene-wrapper">
-    <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1"></model-viewer>
-    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
+<div class="viewer-container">
+    <model-viewer id="room-layer" src="Room.glb" camera-controls disable-zoom exposure="1" shadow-intensity="1"></model-viewer>
+    
+    <model-viewer id="sofa-layer" src="Sofa2.glb" exposure="1" shadow-intensity="1.5"></model-viewer>
 </div>
 
-<div class="dev-panel">
-    <h3>🛠️ Calibrator v2.0</h3>
-    <p style="font-size:11px; margin-top:-10px;">Find X, Y, Z, and Scale. Write them down!</p>
-
-    <label>Choose Sofa:</label>
-    <select id="selector" style="width:100%; padding:5px; margin-bottom:15px;">
-        <option value="Sofa1.glb">Sofa 1</option>
-        <option value="Sofa2.glb">Sofa 2 (Check Height!)</option>
-        <option value="Sofa3.glb">Sofa 3</option>
-        <option value="Sofa4.glb">Sofa 4</option>
-        <option value="Sofa5.glb">Sofa 5</option>
+<div class="controls">
+    <label for="config-select"><b>Select Sofa Configuration:</b></label><br><br>
+    <select id="config-select">
+        <option value="sofa2">Configuration A: Grey Fabric</option>
+        <option value="sofa4">Configuration B: Vintage Style</option>
+        <option value="sofa5">Configuration C: Office Style</option>
     </select>
-
-    <label>Scale (Size) <span id="val-scale" class="val">1.0</span></label>
-    <input type="range" id="inp-scale" min="0.01" max="5" step="0.01" value="1">
-
-    <label>Horizontal (X) <span id="val-x" class="val">0m</span></label>
-    <input type="range" id="inp-x" min="-10" max="10" step="0.1" value="0">
-
-    <label>Vertical Height (Y) <span id="val-y" class="val">0m</span></label>
-    <input type="range" id="inp-y" min="-20" max="20" step="0.1" value="0">
-    
-    <label>Forward/Back (Z) <span id="val-z" class="val">0m</span></label>
-    <input type="range" id="inp-z" min="-20" max="20" step="0.1" value="0">
 </div>
 
 <script>
-    const room = document.querySelector('#room');
-    const sofa = document.querySelector('#sofa');
-    
+    // --- FINAL CALIBRATED DATA ---
+    const sofaData = {
+        // Format: position: 'Xm Ym Zm' (Left/Right, Up/Down, Forward/Back)
+        
+        'sofa2': { 
+            file: 'Sofa2.glb', 
+            scale: '0.08 0.08 0.08', 
+            position: '0m 6.0m 0m' // Set to 6.0m since you said >5. Adjust if needed.
+        },
+        
+        'sofa4': { 
+            file: 'Sofa4.glb', 
+            scale: '1.11 1.11 1.11', 
+            position: '0m 0.8m -4.7m' 
+        },
+        
+        'sofa5': { 
+            file: 'Sofa5.glb', 
+            scale: '1.08 1.08 1.08', 
+            position: '0m -0.5m -5.1m' 
+        }
+    };
+    // -----------------------------
+
+    const room = document.querySelector('#room-layer');
+    const sofa = document.querySelector('#sofa-layer');
+    const selector = document.querySelector('#config-select');
+
+    // 1. Initialize with the first sofa's settings (Sofa 2)
+    const initialData = sofaData['sofa2'];
+    sofa.scale = initialData.scale;
+    sofa.cameraTarget = initialData.position;
+
+    // 2. Sync Camera Movements (Room dictates movement)
     room.addEventListener('camera-change', () => {
         sofa.cameraOrbit = room.cameraOrbit;
         sofa.fieldOfView = room.fieldOfView;
     });
 
-    const inputs = {
-        sel: document.querySelector('#selector'),
-        scale: document.querySelector('#inp-scale'),
-        x: document.querySelector('#inp-x'),
-        y: document.querySelector('#inp-y'),
-        z: document.querySelector('#inp-z')
-    };
+    // 3. Handle Sofa Switching
+    selector.addEventListener('change', (e) => {
+        const key = e.target.value;
+        const data = sofaData[key];
 
-    function update() {
-        const s = inputs.scale.value;
-        const x = inputs.x.value;
-        const y = inputs.y.value; 
-        const z = inputs.z.value;
-
-        sofa.scale = `${s} ${s} ${s}`;
-        // Apply X, Y, Z to camera target
-        sofa.cameraTarget = `${x}m ${y}m ${z}m`;
-
-        document.querySelector('#val-scale').innerText = s;
-        document.querySelector('#val-x').innerText = x + 'm';
-        document.querySelector('#val-y').innerText = y + 'm';
-        document.querySelector('#val-z').innerText = z + 'm';
-    }
-
-    Object.values(inputs).forEach(el => el.addEventListener('input', update));
-    inputs.sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
+        // Change the file
+        sofa.src = data.file;
+        
+        // Apply the specific calibration for that sofa
+        sofa.scale = data.scale;
+        sofa.cameraTarget = data.position; 
+    });
 </script>
+
 </body>
 </html>
