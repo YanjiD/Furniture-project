@@ -7,16 +7,17 @@
         body { margin: 0; background-color: #444444; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; color: white; }
         .viewer-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; }
         
-        /* Layer 1: The Room (Background) - Camera is LOCKED */
+        /* Layer 1: The Room (Background) */
         #room-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
-            pointer-events: none; 
+            /* Pointer events enabled so they can use the mouse to zoom if they want, 
+               but we restrict the angle in the tag below */
         }
         
         /* Layer 2: The Sofa (Foreground) */
         #sofa-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
-            pointer-events: none; /* User rotates via slider */
+            pointer-events: none; 
         }
 
         .controls { 
@@ -35,6 +36,8 @@
     <model-viewer id="room-layer" 
                   src="Room.glb" 
                   camera-orbit="90deg 89deg 12.37m" 
+                  min-camera-orbit="90deg 89deg 2m"
+                  max-camera-orbit="90deg 89deg 50m"
                   disable-zoom 
                   interaction-prompt="none"
                   exposure="1" 
@@ -62,43 +65,34 @@
     </div>
     
     <div>
-        <label>2. Rotate Furniture:</label><br>
-        <input type="range" id="rotate-slider" min="-180" max="180" step="5" value="0">
+        <label>2. Adjust Room View (Zoom):</label><br>
+        <input type="range" id="zoom-slider" min="5" max="30" step="0.5" value="12.37">
     </div>
 </div>
 
 <script>
-    // --- FINAL CALIBRATED DATA (Extracted from your screenshots) ---
+    // --- FINAL CALIBRATED DATA ---
     const sofaData = {
-        // Sofa 1
         'sofa1': { 
             file: 'Sofa1.glb', 
             scale: '0.5724 0.5724 0.5724', 
             position: '39.5m 26.3m 26.3m' 
         },
-        
-        // Sofa 2
         'sofa2': { 
             file: 'Sofa2.glb', 
             scale: '0.3685 0.3685 0.3685', 
             position: '79.6m 59.2m 65.8m' 
         },
-
-        // Sofa 4
         'sofa4': { 
             file: 'Sofa4.glb', 
             scale: '2 2 2', 
             position: '0m 2m 0m' 
         },
-
-        // Sofa 5
         'sofa5': { 
             file: 'Sofa5.glb', 
             scale: '0.5659 0.5659 0.5659', 
             position: '434.2m 335.5m 335.5m' 
         },
-
-        // Sofa 6
         'sofa6': { 
             file: 'Sofa6.glb', 
             scale: '0.4738 0.4738 0.4738', 
@@ -106,33 +100,34 @@
         }
     };
 
+    const room = document.querySelector('#room-layer');
     const sofa = document.querySelector('#sofa-layer');
     const selector = document.querySelector('#config-select');
-    const rotator = document.querySelector('#rotate-slider');
+    const zoomSlider = document.querySelector('#zoom-slider');
 
+    // 1. Handle Selection
     function updateSofa(key) {
         const data = sofaData[key];
         sofa.src = data.file;
         sofa.scale = data.scale;
         sofa.cameraTarget = data.position;
-        
-        // Reset rotation slider to center (0)
-        rotator.value = 0;
-        sofa.orientation = `0deg 0deg 0deg`;
     }
 
-    // 1. Handle Selection
     selector.addEventListener('change', (e) => {
         updateSofa(e.target.value);
     });
 
-    // 2. Handle User Rotation
-    rotator.addEventListener('input', (e) => {
-        const userRot = e.target.value;
-        sofa.orientation = `0deg ${userRot}deg 0deg`;
+    // 2. Handle Room Zoom (Enlarge)
+    // We update the camera orbit radius based on the slider
+    zoomSlider.addEventListener('input', (e) => {
+        const radius = e.target.value;
+        // Keep angle locked at 90deg 89deg, only change radius
+        const newOrbit = `90deg 89deg ${radius}m`;
+        room.cameraOrbit = newOrbit;
+        sofa.cameraOrbit = newOrbit;
     });
 
-    // 3. Initialize with first option
+    // Initialize
     updateSofa('sofa1');
 </script>
 
