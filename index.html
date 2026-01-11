@@ -11,7 +11,7 @@
 
         .dev-panel {
             position: absolute; bottom: 10px; left: 10px; z-index: 100;
-            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 300px;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
             max-height: 90vh; overflow-y: auto; border: 1px solid #777;
         }
         .info-panel {
@@ -27,18 +27,30 @@
 <body>
 
 <div class="info-panel">
-    <b>📷 CAMERA ANGLE (Write this down!):</b><br>
-    <span id="cam-readout" style="color:cyan; font-family: monospace;">0deg 75deg 10m</span>
+    <b>📷 CAMERA ANGLE (Copy this!):</b><br>
+    <span id="cam-readout" style="color:cyan; font-family: monospace;">Waiting for input...</span>
 </div>
 
 <div class="scene-wrapper">
-    <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1" shadow-intensity="1"></model-viewer>
+    <model-viewer id="room" 
+                  src="Room.glb" 
+                  camera-controls 
+                  disable-zoom 
+                  exposure="1" 
+                  shadow-intensity="1"
+                  min-camera-orbit="auto auto 0m"
+                  max-camera-orbit="auto auto 500m">
+    </model-viewer>
     
-    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
+    <model-viewer id="sofa" 
+                  src="Sofa1.glb" 
+                  exposure="1" 
+                  camera-target="0m 0m 0m">
+    </model-viewer>
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Setup Tool v6.0</h3>
+    <h3>🛠️ Precision Staging v7.0</h3>
     <label>SELECT SOFA:</label>
     <select id="selector">
         <option value="Sofa1.glb">Sofa 1</option>
@@ -49,42 +61,46 @@
         <option value="Sofa6.glb">Sofa 6</option>
     </select>
 
-    <label style="color:orange">Rotate Sofa (Yaw): <span id="val-rot" class="val">0 deg</span></label>
-    <input type="range" id="inp-rot" min="0" max="360" step="1" value="0">
+    <label style="color:orange">1. Rotation (Wall Alignment): <span id="val-rot" class="val">0 deg</span></label>
+    <input type="range" id="inp-rot" min="-180" max="180" step="1" value="0">
 
-    <label>Scale: <span id="val-scale" class="val">1.0</span></label>
-    <input type="range" id="inp-scale" min="0.01" max="100.0" step="0.01" value="1">
+    <label>2. Size (Scale): <span id="val-scale" class="val">1.0</span></label>
+    <input type="range" id="inp-scale" min="0.0001" max="2.0" step="0.0001" value="1">
 
-    <label>X (Left/Right): <span id="val-x" class="val">0m</span></label>
-    <input type="range" id="inp-x" min="-500" max="500" step="0.1" value="0">
+    <label>3. Left/Right (X): <span id="val-x" class="val">0m</span></label>
+    <input type="range" id="inp-x" min="-100" max="100" step="0.1" value="0">
 
-    <label>Y (Up/Down): <span id="val-y" class="val">0m</span></label>
-    <input type="range" id="inp-y" min="-500" max="500" step="0.1" value="0">
+    <label>Up/Down (Y): <span id="val-y" class="val">0m</span></label>
+    <input type="range" id="inp-y" min="-100" max="100" step="0.1" value="0">
     
-    <label>Z (Fwd/Back): <span id="val-z" class="val">0m</span></label>
-    <input type="range" id="inp-z" min="-500" max="500" step="0.1" value="0">
+    <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
+    <input type="range" id="inp-z" min="-100" max="100" step="0.1" value="0">
+
+    <label style="color:cyan; margin-top:15px; border-top:1px solid #555; padding-top:5px;">CAMERA ZOOM (Radius):</label>
+    <input type="range" id="inp-rad" min="0" max="50" step="0.1" value="20">
 </div>
 
 <script>
     const room = document.querySelector('#room');
     const sofa = document.querySelector('#sofa');
     
-    // 1. Sync Camera & Update Readout
+    // Sync Camera
     room.addEventListener('camera-change', () => {
-        // Sync sofa view
-        sofa.cameraOrbit = room.cameraOrbit;
-        sofa.fieldOfView = room.fieldOfView;
-        
-        // Update Readout for the user
+        // Sync the view
         const orb = room.getCameraOrbit();
-        // Convert radians to deg for easier reading if needed, but model-viewer accepts rads too. 
-        // We will output string format that model-viewer uses naturally usually in deg/m if parsed, 
-        // but getCameraOrbit returns rads. Let's convert to deg for the user to copy-paste easily.
         const thetaDeg = (orb.theta * (180/Math.PI)).toFixed(0);
         const phiDeg = (orb.phi * (180/Math.PI)).toFixed(0);
-        const radius = orb.radius.toFixed(1);
+        const radius = orb.radius.toFixed(2);
         
+        // We sync orientation but allow independent radius control via slider if needed
+        sofa.cameraOrbit = room.cameraOrbit; 
+        sofa.fieldOfView = room.fieldOfView;
+
+        // Update Readout
         document.getElementById('cam-readout').innerText = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
+        
+        // Update the Zoom slider to match what you are doing with your mouse
+        document.getElementById('inp-rad').value = radius;
     });
 
     const inputs = {
@@ -93,22 +109,28 @@
         scale: document.querySelector('#inp-scale'),
         x: document.querySelector('#inp-x'),
         y: document.querySelector('#inp-y'),
-        z: document.querySelector('#inp-z')
+        z: document.querySelector('#inp-z'),
+        rad: document.querySelector('#inp-rad')
     };
 
     function update() {
+        // 1. Apply Transforms
         const s = inputs.scale.value;
         const x = inputs.x.value; const y = inputs.y.value; const z = inputs.z.value;
         const r = inputs.rot.value;
 
-        // Apply Position & Scale
         sofa.scale = `${s} ${s} ${s}`;
         sofa.cameraTarget = `${x}m ${y}m ${z}m`;
-        
-        // Apply Rotation (Yaw is the middle value: 0deg Ydeg 0deg)
-        sofa.orientation = `0deg ${r}deg 0deg`;
+        sofa.orientation = `0deg ${r}deg 0deg`; // Rotate around Y axis
 
-        // Update Text
+        // 2. Apply Manual Zoom if using slider
+        // (This lets you force yourself inside even if mouse scroll gets stuck)
+        const currentOrbit = room.getCameraOrbit();
+        if(Math.abs(currentOrbit.radius - inputs.rad.value) > 0.5) {
+             room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m`;
+        }
+
+        // 3. Update Labels
         document.querySelector('#val-scale').innerText = s;
         document.querySelector('#val-x').innerText = x + 'm';
         document.querySelector('#val-y').innerText = y + 'm';
