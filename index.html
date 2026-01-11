@@ -26,11 +26,11 @@
 <div class="scene-wrapper">
     <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1" field-of-view="14deg" min-field-of-view="10deg" max-field-of-view="100deg"></model-viewer>
     
-    <model-viewer id="sofa" src="Sofa2.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
+    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Calibrator v4.0 (Wide Range)</h3>
+    <h3>🛠️ Calibrator v5.0 (Extreme)</h3>
     
     <label>1. SELECT SOFA:</label>
     <select id="selector">
@@ -44,16 +44,16 @@
     <input type="range" id="inp-fov" min="5" max="60" step="1" value="14">
 
     <label>Sofa Size (Scale): <span id="val-scale" class="val">1.0</span></label>
-    <input type="range" id="inp-scale" min="0.01" max="10.0" step="0.01" value="1">
+    <input type="range" id="inp-scale" min="0.01" max="100.0" step="0.01" value="1">
 
     <label>Left/Right (X): <span id="val-x" class="val">0m</span></label>
-    <input type="range" id="inp-x" min="-50" max="50" step="0.1" value="0">
+    <input type="range" id="inp-x" min="-500" max="500" step="0.1" value="0">
 
     <label>Up/Down (Y): <span id="val-y" class="val">0m</span></label>
-    <input type="range" id="inp-y" min="-50" max="50" step="0.1" value="0">
+    <input type="range" id="inp-y" min="-500" max="500" step="0.1" value="0">
     
     <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
-    <input type="range" id="inp-z" min="-50" max="50" step="0.1" value="0">
+    <input type="range" id="inp-z" min="-500" max="500" step="0.1" value="0">
 </div>
 
 <script>
@@ -99,7 +99,6 @@
     
     inputs.sel.addEventListener('change', (e) => { 
         sofa.src = e.target.value;
-        // Optional: Reset sliders if you want, or keep them to compare
     });
 </script>
 </body>
