@@ -27,8 +27,8 @@
 <body>
 
 <div class="info-panel">
-    <b>📷 CAMERA ANGLE (Copy this!):</b><br>
-    <span id="cam-readout" style="color:cyan; font-family: monospace;">Waiting for input...</span>
+    <b>📷 CAMERA ANGLE (LOCKED):</b><br>
+    <span style="color:cyan; font-family: monospace;">90deg 89deg 12.37m</span>
 </div>
 
 <div class="scene-wrapper">
@@ -51,59 +51,47 @@
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Precision Staging v7.0</h3>
+    <h3>🛠️ Calibrator v8.2 (Expanded)</h3>
     <label>SELECT SOFA:</label>
     <select id="selector">
-        <option value="Sofa1.glb">Sofa 1</option>
-        <option value="Sofa2.glb">Sofa 2</option>
-        <option value="Sofa3.glb">Sofa 3</option>
-        <option value="Sofa4.glb">Sofa 4</option>
-        <option value="Sofa5.glb">Sofa 5</option>
-        <option value="Sofa6.glb">Sofa 6</option>
+        <option value="sofa1">Sofa 1</option>
+        <option value="sofa2">Sofa 2</option>
+        <option value="sofa4">Sofa 4</option>
+        <option value="sofa5">Sofa 5</option>
+        <option value="sofa6">Sofa 6</option>
     </select>
 
-    <label style="color:orange">1. Rotation (Wall Alignment): <span id="val-rot" class="val">0 deg</span></label>
+    <label style="color:orange">1. Rotation: <span id="val-rot" class="val">0 deg</span></label>
     <input type="range" id="inp-rot" min="-180" max="180" step="1" value="0">
 
     <label>2. Size (Scale): <span id="val-scale" class="val">1.0</span></label>
     <input type="range" id="inp-scale" min="0.0001" max="2.0" step="0.0001" value="1">
 
     <label>3. Left/Right (X): <span id="val-x" class="val">0m</span></label>
-    <input type="range" id="inp-x" min="-100" max="100" step="0.1" value="0">
+    <input type="range" id="inp-x" min="-1000" max="1000" step="0.1" value="0">
 
     <label>Up/Down (Y): <span id="val-y" class="val">0m</span></label>
-    <input type="range" id="inp-y" min="-100" max="100" step="0.1" value="0">
+    <input type="range" id="inp-y" min="-1000" max="1000" step="0.1" value="0">
     
     <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
-    <input type="range" id="inp-z" min="-100" max="100" step="0.1" value="0">
+    <input type="range" id="inp-z" min="-1000" max="1000" step="0.1" value="0">
 
     <label style="color:cyan; margin-top:15px; border-top:1px solid #555; padding-top:5px;">CAMERA ZOOM (Radius):</label>
     <input type="range" id="inp-rad" min="0" max="50" step="0.1" value="12.37">
 </div>
 
 <script>
+    // --- PRE-FILLED DATA FROM YOUR SCREENSHOTS ---
+    const savedData = {
+        'sofa1': { file: 'Sofa1.glb', scale: 0.5724, x: 21.1, y: 24.3, z: 24.3, rot: 0 },
+        'sofa2': { file: 'Sofa2.glb', scale: 0.3488, x: 79.6, y: 46.1, z: 51.3, rot: 0 },
+        'sofa4': { file: 'Sofa4.glb', scale: 1.6382, x: 3.9, y: 2.0, z: 0.0, rot: 0 },
+        'sofa5': { file: 'Sofa5.glb', scale: 1.0, x: 0, y: 0, z: 0, rot: 0 }, // NEEDS FIXING
+        'sofa6': { file: 'Sofa6.glb', scale: 1.0, x: 0, y: 0, z: 0, rot: 0 }  // CHECK THIS ONE
+    };
+
     const room = document.querySelector('#room');
     const sofa = document.querySelector('#sofa');
-    
-    // Sync Camera
-    room.addEventListener('camera-change', () => {
-        // Sync the view
-        const orb = room.getCameraOrbit();
-        const thetaDeg = (orb.theta * (180/Math.PI)).toFixed(0);
-        const phiDeg = (orb.phi * (180/Math.PI)).toFixed(0);
-        const radius = orb.radius.toFixed(2);
-        
-        // We sync orientation but allow independent radius control via slider if needed
-        sofa.cameraOrbit = room.cameraOrbit; 
-        sofa.fieldOfView = room.fieldOfView;
-
-        // Update Readout
-        document.getElementById('cam-readout').innerText = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
-        
-        // Update the Zoom slider to match what you are doing with your mouse
-        document.getElementById('inp-rad').value = radius;
-    });
-
     const inputs = {
         sel: document.querySelector('#selector'),
         rot: document.querySelector('#inp-rot'),
@@ -114,24 +102,33 @@
         rad: document.querySelector('#inp-rad')
     };
 
+    // Load Data Function
+    function loadSofa(key) {
+        const data = savedData[key];
+        sofa.src = data.file;
+        
+        // Update Sliders
+        inputs.scale.value = data.scale;
+        inputs.x.value = data.x;
+        inputs.y.value = data.y;
+        inputs.z.value = data.z;
+        inputs.rot.value = data.rot;
+        
+        update(); // Apply changes
+    }
+
     function update() {
-        // 1. Apply Transforms
         const s = inputs.scale.value;
-        const x = inputs.x.value; const y = inputs.y.value; const z = inputs.z.value;
+        const x = inputs.x.value; 
+        const y = inputs.y.value; 
+        const z = inputs.z.value;
         const r = inputs.rot.value;
 
         sofa.scale = `${s} ${s} ${s}`;
         sofa.cameraTarget = `${x}m ${y}m ${z}m`;
-        sofa.orientation = `0deg ${r}deg 0deg`; // Rotate around Y axis
+        sofa.orientation = `0deg ${r}deg 0deg`;
 
-        // 2. Apply Manual Zoom if using slider
-        // (This lets you force yourself inside even if mouse scroll gets stuck)
-        const currentOrbit = room.getCameraOrbit();
-        if(Math.abs(currentOrbit.radius - inputs.rad.value) > 0.5) {
-             room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m`;
-        }
-
-        // 3. Update Labels
+        // Update Labels
         document.querySelector('#val-scale').innerText = s;
         document.querySelector('#val-x').innerText = x + 'm';
         document.querySelector('#val-y').innerText = y + 'm';
@@ -139,8 +136,29 @@
         document.querySelector('#val-rot').innerText = r + ' deg';
     }
 
+    // Sync Camera
+    room.addEventListener('camera-change', () => {
+        const orb = room.getCameraOrbit();
+        sofa.cameraOrbit = room.cameraOrbit; 
+        sofa.fieldOfView = room.fieldOfView;
+        document.getElementById('inp-rad').value = orb.radius.toFixed(2);
+    });
+    
+    // Zoom Slider
+    inputs.rad.addEventListener('input', () => {
+        const currentOrbit = room.getCameraOrbit();
+        room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m`;
+    });
+
     Object.values(inputs).forEach(el => el.addEventListener('input', update));
-    inputs.sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
+    
+    // Handle Selector Change
+    inputs.sel.addEventListener('change', (e) => {
+        loadSofa(e.target.value);
+    });
+
+    // Initialize with Sofa 1
+    loadSofa('sofa1');
 </script>
 </body>
 </html>
