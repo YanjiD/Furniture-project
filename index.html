@@ -5,25 +5,45 @@
     <style>
         body { margin: 0; background: #222; color: white; font-family: sans-serif; }
         .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        
         #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-        .dev-panel { position: absolute; bottom: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 300px; max-height: 90vh; overflow-y: auto; }
-        input[type=range] { width: 100%; margin-bottom: 5px; }
-        label { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 5px; }
+
+        .dev-panel {
+            position: absolute; bottom: 10px; left: 10px; z-index: 100;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 300px;
+            max-height: 90vh; overflow-y: auto; border: 1px solid #777;
+        }
+        input[type=range] { width: 100%; margin-bottom: 5px; cursor: pointer; }
+        label { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 8px; }
         .val { color: #0f0; font-weight: bold; }
+        h3 { margin-top: 0; color: #ff9800; border-bottom: 1px solid #555; padding-bottom: 5px; }
         select { width: 100%; padding: 8px; background: #333; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="scene-wrapper">
-    <model-viewer id="room" src="Room.glb" camera-controls disable-zoom exposure="1" field-of-view="14deg" min-field-of-view="10deg" max-field-of-view="100deg"></model-viewer>
-    <model-viewer id="sofa" src="Sofa1.glb" exposure="1" camera-target="0m 0m 0m"></model-viewer>
+    <model-viewer id="room" 
+                  src="Room.glb" 
+                  camera-controls 
+                  exposure="1" 
+                  shadow-intensity="1"
+                  min-camera-orbit="auto auto 0m" 
+                  max-camera-orbit="auto auto 100m">
+    </model-viewer>
+    
+    <model-viewer id="sofa" 
+                  src="Sofa1.glb" 
+                  exposure="1" 
+                  camera-target="0m 0m 0m">
+    </model-viewer>
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Calibrator v5.0</h3>
-    <label>SELECT SOFA:</label>
+    <h3>🛠️ House Breaker Tool</h3>
+    
+    <label>1. SELECT SOFA:</label>
     <select id="selector">
         <option value="Sofa1.glb">Sofa 1</option>
         <option value="Sofa2.glb">Sofa 2</option>
@@ -33,7 +53,11 @@
         <option value="Sofa6.glb">Sofa 6</option>
     </select>
 
-    <label>Scale: <span id="val-scale" class="val">1.0</span></label>
+    <label style="color:cyan">FORCE CAMERA RADIUS (Zoom): <span id="val-rad" class="val">Auto</span></label>
+    <input type="range" id="inp-rad" min="0" max="20" step="0.1" value="10">
+    <p style="font-size:10px; color:cyan; margin-top:-2px;">Slide LEFT (towards 0) to force camera inside walls.</p>
+
+    <label>Sofa Scale: <span id="val-scale" class="val">1.0</span></label>
     <input type="range" id="inp-scale" min="0.01" max="100.0" step="0.01" value="1">
 
     <label>X (Left/Right): <span id="val-x" class="val">0m</span></label>
@@ -49,20 +73,49 @@
 <script>
     const room = document.querySelector('#room');
     const sofa = document.querySelector('#sofa');
-    const inputs = { sel: document.querySelector('#selector'), scale: document.querySelector('#inp-scale'), x: document.querySelector('#inp-x'), y: document.querySelector('#inp-y'), z: document.querySelector('#inp-z') };
+    
+    // Sync Camera Rotation (Orbit) but allow independent Zoom for Room
+    room.addEventListener('camera-change', (e) => {
+        // We sync the angle, but not the radius (zoom), so you can fly inside
+        const orbit = room.getCameraOrbit();
+        const theta = orbit.theta; // Horizontal angle
+        const phi = orbit.phi;     // Vertical angle
+        
+        // Sofa always looks at center, we just match the rotation angle
+        sofa.cameraOrbit = `${theta}rad ${phi}rad auto`;
+        sofa.fieldOfView = room.fieldOfView; 
+    });
 
-    room.addEventListener('camera-change', () => { sofa.cameraOrbit = room.cameraOrbit; sofa.fieldOfView = room.fieldOfView; });
+    const inputs = {
+        sel: document.querySelector('#selector'),
+        rad: document.querySelector('#inp-rad'),
+        scale: document.querySelector('#inp-scale'),
+        x: document.querySelector('#inp-x'),
+        y: document.querySelector('#inp-y'),
+        z: document.querySelector('#inp-z')
+    };
 
     function update() {
+        // Force Camera Radius (The "House Breaker")
+        const rad = inputs.rad.value;
+        // Adjust the room's camera radius manually
+        const currentOrbit = room.getCameraOrbit();
+        room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${rad}m`;
+        document.querySelector('#val-rad').innerText = rad + 'm';
+
+        // Sofa Transforms
         const s = inputs.scale.value;
         const x = inputs.x.value; const y = inputs.y.value; const z = inputs.z.value;
+        
         sofa.scale = `${s} ${s} ${s}`;
         sofa.cameraTarget = `${x}m ${y}m ${z}m`;
+
         document.querySelector('#val-scale').innerText = s;
         document.querySelector('#val-x').innerText = x + 'm';
         document.querySelector('#val-y').innerText = y + 'm';
         document.querySelector('#val-z').innerText = z + 'm';
     }
+
     Object.values(inputs).forEach(el => el.addEventListener('input', update));
     inputs.sel.addEventListener('change', (e) => { sofa.src = e.target.value; });
 </script>
