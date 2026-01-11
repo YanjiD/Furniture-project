@@ -14,6 +14,10 @@
             background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
             max-height: 90vh; overflow-y: auto; border: 1px solid #777;
         }
+        .info-panel {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+            background: rgba(0, 0, 100, 0.8); padding: 10px; border-radius: 5px; pointer-events: none;
+        }
         input[type=range] { width: 100%; margin-bottom: 5px; cursor: pointer; }
         label { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 8px; }
         .val { color: #0f0; font-weight: bold; }
@@ -22,6 +26,11 @@
 </head>
 <body>
 
+<div class="info-panel">
+    <b>📷 CAMERA ANGLE (Copy this!):</b><br>
+    <span id="cam-readout" style="color:cyan; font-family: monospace;">Waiting for input...</span>
+</div>
+
 <div class="scene-wrapper">
     <model-viewer id="room" 
                   src="Room.glb" 
@@ -29,11 +38,12 @@
                   disable-zoom 
                   exposure="1" 
                   shadow-intensity="1"
-                  camera-orbit="90deg 85deg 9m">
+                  min-camera-orbit="auto auto 0m"
+                  max-camera-orbit="auto auto 500m">
     </model-viewer>
     
     <model-viewer id="sofa" 
-                  src="Sofa6.glb" 
+                  src="Sofa1.glb" 
                   exposure="1" 
                   camera-target="0m 0m 0m">
     </model-viewer>
@@ -43,26 +53,31 @@
     <h3>🛠️ Precision Staging v7.0</h3>
     <label>SELECT SOFA:</label>
     <select id="selector">
-        <option value="Sofa6.glb">Sofa 6 (Grey Sofa)</option>
-        <option value="Sofa1.glb">Sofa 1 (Orange)</option>
-        <option value="Sofa2.glb">Sofa 2 (White)</option>
-        <option value="Sofa5.glb">Sofa 5 (Brown)</option>
+        <option value="Sofa1.glb">Sofa 1</option>
+        <option value="Sofa2.glb">Sofa 2</option>
+        <option value="Sofa3.glb">Sofa 3</option>
+        <option value="Sofa4.glb">Sofa 4</option>
+        <option value="Sofa5.glb">Sofa 5</option>
+        <option value="Sofa6.glb">Sofa 6</option>
     </select>
 
-    <label style="color:orange">1. Rotation: <span id="val-rot" class="val">0 deg</span></label>
-    <input type="range" id="inp-rot" min="-180" max="180" step="5" value="0">
+    <label style="color:orange">1. Rotation (Wall Alignment): <span id="val-rot" class="val">0 deg</span></label>
+    <input type="range" id="inp-rot" min="-180" max="180" step="1" value="0">
 
     <label>2. Size (Scale): <span id="val-scale" class="val">1.0</span></label>
     <input type="range" id="inp-scale" min="0.0001" max="2.0" step="0.0001" value="1">
 
     <label>3. Left/Right (X): <span id="val-x" class="val">0m</span></label>
-    <input type="range" id="inp-x" min="-200" max="200" step="0.1" value="0">
+    <input type="range" id="inp-x" min="-100" max="100" step="0.1" value="0">
 
     <label>Up/Down (Y): <span id="val-y" class="val">0m</span></label>
-    <input type="range" id="inp-y" min="-200" max="200" step="0.1" value="0">
+    <input type="range" id="inp-y" min="-100" max="100" step="0.1" value="0">
     
     <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
-    <input type="range" id="inp-z" min="-200" max="200" step="0.1" value="0">
+    <input type="range" id="inp-z" min="-100" max="100" step="0.1" value="0">
+
+    <label style="color:cyan; margin-top:15px; border-top:1px solid #555; padding-top:5px;">CAMERA ZOOM (Radius):</label>
+    <input type="range" id="inp-rad" min="0" max="50" step="0.1" value="20">
 </div>
 
 <script>
@@ -71,8 +86,21 @@
     
     // Sync Camera
     room.addEventListener('camera-change', () => {
+        // Sync the view
+        const orb = room.getCameraOrbit();
+        const thetaDeg = (orb.theta * (180/Math.PI)).toFixed(0);
+        const phiDeg = (orb.phi * (180/Math.PI)).toFixed(0);
+        const radius = orb.radius.toFixed(2);
+        
+        // We sync orientation but allow independent radius control via slider if needed
         sofa.cameraOrbit = room.cameraOrbit; 
         sofa.fieldOfView = room.fieldOfView;
+
+        // Update Readout
+        document.getElementById('cam-readout').innerText = `${thetaDeg}deg ${phiDeg}deg ${radius}m`;
+        
+        // Update the Zoom slider to match what you are doing with your mouse
+        document.getElementById('inp-rad').value = radius;
     });
 
     const inputs = {
@@ -81,20 +109,28 @@
         scale: document.querySelector('#inp-scale'),
         x: document.querySelector('#inp-x'),
         y: document.querySelector('#inp-y'),
-        z: document.querySelector('#inp-z')
+        z: document.querySelector('#inp-z'),
+        rad: document.querySelector('#inp-rad')
     };
 
     function update() {
+        // 1. Apply Transforms
         const s = inputs.scale.value;
-        const x = inputs.x.value; 
-        const y = inputs.y.value; 
-        const z = inputs.z.value;
+        const x = inputs.x.value; const y = inputs.y.value; const z = inputs.z.value;
         const r = inputs.rot.value;
 
         sofa.scale = `${s} ${s} ${s}`;
         sofa.cameraTarget = `${x}m ${y}m ${z}m`;
-        sofa.orientation = `0deg ${r}deg 0deg`;
+        sofa.orientation = `0deg ${r}deg 0deg`; // Rotate around Y axis
 
+        // 2. Apply Manual Zoom if using slider
+        // (This lets you force yourself inside even if mouse scroll gets stuck)
+        const currentOrbit = room.getCameraOrbit();
+        if(Math.abs(currentOrbit.radius - inputs.rad.value) > 0.5) {
+             room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m`;
+        }
+
+        // 3. Update Labels
         document.querySelector('#val-scale').innerText = s;
         document.querySelector('#val-x').innerText = x + 'm';
         document.querySelector('#val-y').innerText = y + 'm';
