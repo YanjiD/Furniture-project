@@ -9,13 +9,13 @@
         /* Layer 1: The Room (Background) - Camera is LOCKED */
         #room-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
-            pointer-events: none; /* Prevents user from moving the room */
+            pointer-events: none; 
         }
         
         /* Layer 2: The Sofa (Foreground) */
         #sofa-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
-            pointer-events: none; /* We use the slider for rotation, not drag */
+            pointer-events: none; /* User rotates via slider */
         }
 
         .controls { 
@@ -66,9 +66,9 @@
 </div>
 
 <script>
-    // --- YOUR EXTRACTED PARAMETERS ---
+    // --- PARAMETERS (Sofa 4 Removed) ---
     const sofaData = {
-        // Sofa 1 (Orange 2-Seater)
+        // Option 1: Orange 2-Seater
         'sofa1': { 
             file: 'Sofa1.glb', 
             scale: '0.5001 0.5001 0.5001', 
@@ -76,7 +76,7 @@
             baseRotation: 0 
         },
         
-        // Sofa 2 (White Armchair)
+        // Option 2: White Armchair
         'sofa2': { 
             file: 'Sofa2.glb', 
             scale: '0.1383 0.1383 0.1383', 
@@ -84,7 +84,7 @@
             baseRotation: -1 
         },
 
-        // Sofa 5 (Brown Chesterfield)
+        // Option 3: Brown Chesterfield
         'sofa5': { 
             file: 'Sofa5.glb', 
             scale: '0.6251 0.6251 0.6251', 
@@ -92,12 +92,12 @@
             baseRotation: 0 
         },
 
-        // Sofa 6 (Grey Sofa) - ROTATED 180 TO FACE WALL
+        // Option 4: Grey Sofa (Back to Wall)
         'sofa6': { 
             file: 'Sofa6.glb', 
             scale: '0.5001 0.5001 0.5001', 
             position: '-100m 29.6m 0m', 
-            baseRotation: 180 // <--- Adjusted as requested
+            baseRotation: 180 
         }
     };
 
@@ -105,14 +105,13 @@
     const selector = document.querySelector('#config-select');
     const rotator = document.querySelector('#rotate-slider');
 
-    // Function to update the model
     function updateSofa(key) {
         const data = sofaData[key];
         sofa.src = data.file;
         sofa.scale = data.scale;
         sofa.cameraTarget = data.position;
         
-        // Reset slider to center (0) but apply the base rotation
+        // Reset slider to 0, but apply the 'baseRotation' derived from your screenshots
         rotator.value = 0;
         sofa.orientation = `0deg ${data.baseRotation}deg 0deg`;
     }
@@ -128,7 +127,7 @@
         const currentKey = selector.value;
         const baseRot = sofaData[currentKey].baseRotation;
         
-        // Add user rotation to the base rotation
+        // Add user rotation to the specific base rotation of the current sofa
         const totalRot = baseRot + userRot;
         sofa.orientation = `0deg ${totalRot}deg 0deg`;
     });
