@@ -3,7 +3,8 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background-color: #f4f4f4; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        /* CHANGED: Background to Dark Grey (#444) to make room stand out */
+        body { margin: 0; background-color: #444444; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; }
         .viewer-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; }
         
         /* Layer 1: The Room (Background) - Camera is LOCKED */
@@ -33,7 +34,7 @@
 <div class="viewer-container">
     <model-viewer id="room-layer" 
                   src="Room.glb" 
-                  camera-orbit="90deg 85deg 14m" 
+                  camera-orbit="90deg 85deg 9m" 
                   disable-zoom 
                   interaction-prompt="none"
                   exposure="1" 
@@ -42,7 +43,7 @@
     
     <model-viewer id="sofa-layer" 
                   src="Sofa1.glb" 
-                  camera-orbit="90deg 85deg 14m"
+                  camera-orbit="90deg 85deg 9m"
                   exposure="1" 
                   shadow-intensity="1.5">
     </model-viewer>
@@ -66,7 +67,7 @@
 </div>
 
 <script>
-    // --- PARAMETERS (Sofa 4 Removed) ---
+    // --- UPDATED PARAMETERS ---
     const sofaData = {
         // Option 1: Orange 2-Seater
         'sofa1': { 
@@ -92,12 +93,12 @@
             baseRotation: 0 
         },
 
-        // Option 4: Grey Sofa (Back to Wall)
+        // Option 4: Grey Sofa (FIXED: Smaller & Reversed)
         'sofa6': { 
             file: 'Sofa6.glb', 
-            scale: '0.5001 0.5001 0.5001', 
-            position: '-100m 29.6m 0m', 
-            baseRotation: 180 
+            scale: '0.22 0.22 0.22', // Reduced from 0.5 to 0.22
+            position: '0m 0m 0m',    // Reset position to center of room
+            baseRotation: 0          // Flipped back to 0
         }
     };
 
@@ -111,7 +112,7 @@
         sofa.scale = data.scale;
         sofa.cameraTarget = data.position;
         
-        // Reset slider to 0, but apply the 'baseRotation' derived from your screenshots
+        // Reset slider to 0, but apply the 'baseRotation'
         rotator.value = 0;
         sofa.orientation = `0deg ${data.baseRotation}deg 0deg`;
     }
@@ -127,7 +128,6 @@
         const currentKey = selector.value;
         const baseRot = sofaData[currentKey].baseRotation;
         
-        // Add user rotation to the specific base rotation of the current sofa
         const totalRot = baseRot + userRot;
         sofa.orientation = `0deg ${totalRot}deg 0deg`;
     });
