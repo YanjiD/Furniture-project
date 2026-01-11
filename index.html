@@ -3,7 +3,7 @@
 <head>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        /* Dark Grey Background */
+        /* Dark Grey Background per your request */
         body { margin: 0; background: #444444; color: white; font-family: sans-serif; }
         .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         
@@ -31,7 +31,7 @@
                   exposure="1" 
                   shadow-intensity="1"
                   min-camera-orbit="auto auto 0m"
-                  camera-orbit="90deg 93deg 11.40m">
+                  camera-orbit="90deg 85deg 9m">
     </model-viewer>
     
     <model-viewer id="sofa" 
@@ -42,7 +42,7 @@
 </div>
 
 <div class="dev-panel">
-    <h3>🛠️ Master Calibrator v8.1</h3>
+    <h3>🛠️ Master Calibrator v8.0</h3>
     <label>SELECT SOFA:</label>
     <select id="selector">
         <option value="Sofa6.glb">Sofa 6 (Grey Sofa)</option>
@@ -65,6 +65,9 @@
     
     <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
     <input type="range" id="inp-z" min="-500" max="500" step="0.1" value="0">
+
+    <label style="color:cyan; border-top:1px solid #555; margin-top:10px; padding-top:5px;">Room Zoom (Radius):</label>
+    <input type="range" id="inp-rad" min="0" max="50" step="0.1" value="9">
 </div>
 
 <script>
@@ -73,8 +76,14 @@
     
     // Sync Camera
     room.addEventListener('camera-change', () => {
+        // We sync the view angle
+        const orb = room.getCameraOrbit();
         sofa.cameraOrbit = room.cameraOrbit; 
         sofa.fieldOfView = room.fieldOfView;
+
+        // Update zoom slider visual
+        const radius = orb.radius.toFixed(1);
+        document.getElementById('inp-rad').value = radius;
     });
 
     const inputs = {
@@ -83,7 +92,8 @@
         scale: document.querySelector('#inp-scale'),
         x: document.querySelector('#inp-x'),
         y: document.querySelector('#inp-y'),
-        z: document.querySelector('#inp-z')
+        z: document.querySelector('#inp-z'),
+        rad: document.querySelector('#inp-rad')
     };
 
     function update() {
@@ -97,6 +107,13 @@
         sofa.scale = `${s} ${s} ${s}`;
         sofa.cameraTarget = `${x}m ${y}m ${z}m`;
         sofa.orientation = `0deg ${r}deg 0deg`;
+
+        // Apply Manual Zoom (if user drags the cyan slider)
+        const currentOrbit = room.getCameraOrbit();
+        // Only override if the slider is different from actual camera (avoids jitter)
+        if(Math.abs(currentOrbit.radius - inputs.rad.value) > 1.0) {
+             room.cameraOrbit = `${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m`;
+        }
 
         // Update Text Labels
         document.querySelector('#val-scale').innerText = s;
