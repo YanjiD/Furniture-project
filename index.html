@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Furniture Experiment v15</title>
+  <title>Furniture Experiment v14</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <style>
@@ -31,8 +31,18 @@
       display: block;
     }
 
-    #room-layer { position: absolute; inset: 0; z-index: 1; }
-    #sofa-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    #room-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #sofa-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
 
     .controls {
       background: #333;
@@ -46,69 +56,42 @@
       justify-items: center;
     }
 
-    .panel {
-      width: min(820px, 95vw);
+    .control-row {
+      width: min(720px, 95vw);
       display: grid;
-      gap: 12px;
-    }
-
-    .row {
-      display: grid;
-      grid-template-columns: 180px 1fr 110px;
+      grid-template-columns: 180px 1fr 90px;
       align-items: center;
       gap: 12px;
     }
 
-    label { font-size: 14px; font-weight: 700; }
+    label {
+      font-size: 14px;
+      font-weight: 700;
+    }
 
     select {
       padding: 10px 14px;
       font-size: 16px;
       border-radius: 8px;
       border: 1px solid #555;
-      width: 340px;
+      width: 320px;
       cursor: pointer;
       background: #fff;
       color: #000;
+      justify-self: start;
     }
 
-    input[type="range"] { width: 100%; }
+    input[type="range"] {
+      width: 100%;
+    }
 
-    .pill {
+    .value-pill {
       text-align: right;
       font-variant-numeric: tabular-nums;
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.2);
       padding: 6px 10px;
       border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .topRow {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px 18px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .hint {
-      font-size: 12px;
-      opacity: 0.85;
-      line-height: 1.35;
-    }
-
-    button {
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.08);
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: rgba(255,255,255,0.12);
     }
   </style>
 </head>
@@ -139,83 +122,38 @@
   </div>
 
   <div class="controls">
-    <div class="panel">
-      <div class="topRow">
-        <div>
-          <label for="config-select" style="display:block;margin-bottom:8px;">Select Furniture:</label>
-          <select id="config-select">
-            <option value="sofa1">Option 1: Orange 2-Seater</option>
-            <option value="sofa2">Option 2: White Armchair</option>
-            <option value="sofa5">Option 3: Brown Chesterfield</option>
-            <option value="sofa6">Option 4: Grey Sofa</option>
-          </select>
-        </div>
+    <div style="width:min(720px,95vw);">
+      <label for="config-select" style="display:block;margin-bottom:8px;">Select Furniture:</label>
+      <select id="config-select">
+        <option value="sofa1">Option 1: Orange 2-Seater</option>
+        <option value="sofa2">Option 2: White Armchair</option>
+        <option value="sofa5">Option 3: Brown Chesterfield</option>
+        <option value="sofa6">Option 4: Grey Sofa</option>
+      </select>
+    </div>
 
-        <div style="display:flex;gap:10px;align-items:flex-end;">
-          <button id="reset-furniture" type="button">Reset Furniture Position</button>
-        </div>
-      </div>
-
-      <div class="row">
-        <label for="room-scale">Room Size</label>
-        <input id="room-scale" type="range" min="0.6" max="5.0" step="0.05" value="2.25" />
-        <div class="pill"><span id="room-scale-val">2.25</span>x</div>
-      </div>
-
-      <div class="row">
-        <label for="pos-x">Furniture X (Left/Right)</label>
-        <input id="pos-x" type="range" min="-2.0" max="2.0" step="0.01" value="0.00" />
-        <div class="pill"><span id="pos-x-val">0.00</span>m</div>
-      </div>
-
-      <div class="row">
-        <label for="pos-z">Furniture Z (In/Out)</label>
-        <input id="pos-z" type="range" min="-2.0" max="2.0" step="0.01" value="0.00" />
-        <div class="pill"><span id="pos-z-val">0.00</span>m</div>
-      </div>
-
-      <div class="row">
-        <label for="rot-y">Rotation (Turn)</label>
-        <input id="rot-y" type="range" min="-180" max="180" step="1" value="0" />
-        <div class="pill"><span id="rot-y-val">0</span>deg</div>
-      </div>
-
-      <div class="hint">
-        Notes for you (not shown to participants unless you keep it):
-        These sliders control the furniture layer using the <code>position</code> and <code>rotation</code> attributes.
-        If the movement range feels too small or too large, adjust the min/max of X and Z above.
-      </div>
+    <div class="control-row">
+      <label for="room-scale">Room Size</label>
+      <input id="room-scale" type="range" min="0.6" max="5.0" step="0.05" value="2.25" />
+      <div class="value-pill"><span id="room-scale-val">2.25</span>x</div>
     </div>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const sofaData = {
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
+        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
+      };
+
       const room = document.getElementById("room-layer");
-      const furniture = document.getElementById("sofa-layer");
+      const sofa = document.getElementById("sofa-layer");
       const selector = document.getElementById("config-select");
 
       const roomScale = document.getElementById("room-scale");
       const roomScaleVal = document.getElementById("room-scale-val");
-
-      const posX = document.getElementById("pos-x");
-      const posZ = document.getElementById("pos-z");
-      const rotY = document.getElementById("rot-y");
-
-      const posXVal = document.getElementById("pos-x-val");
-      const posZVal = document.getElementById("pos-z-val");
-      const rotYVal = document.getElementById("rot-y-val");
-
-      const resetBtn = document.getElementById("reset-furniture");
-
-      const furnitureData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724" },
-        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659" },
-        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738" }
-      };
-
-      // Default placement for participants to start from
-      const defaultPlacement = { x: 0.00, z: 0.00, rotY: 0 };
 
       function setRoomScale(scaleNum) {
         const s = Number(scaleNum);
@@ -223,50 +161,20 @@
         roomScaleVal.textContent = s.toFixed(2);
       }
 
-      function applyFurnitureTransform() {
-        const x = Number(posX.value);
-        const z = Number(posZ.value);
-        const r = Number(rotY.value);
-
-        // Keep Y at 0 so it stays on the floor in your current coordinate system
-        furniture.setAttribute("position", `${x}m 0m ${z}m`);
-        furniture.setAttribute("rotation", `0deg ${r}deg 0deg`);
-
-        posXVal.textContent = x.toFixed(2);
-        posZVal.textContent = z.toFixed(2);
-        rotYVal.textContent = String(r);
-      }
-
-      function resetFurnitureTransform() {
-        posX.value = defaultPlacement.x;
-        posZ.value = defaultPlacement.z;
-        rotY.value = defaultPlacement.rotY;
-        applyFurnitureTransform();
-      }
-
-      function updateFurniture(key) {
-        const data = furnitureData[key];
+      function updateSofa(key) {
+        const data = sofaData[key];
         if (!data) return;
-        furniture.setAttribute("src", data.file);
-        furniture.setAttribute("scale", data.scale);
 
-        // Keep whatever the participant set for position/rotation
-        applyFurnitureTransform();
+        sofa.setAttribute("src", data.file);
+        sofa.setAttribute("scale", data.scale);
+        sofa.setAttribute("camera-target", data.target);
       }
 
-      selector.addEventListener("change", (e) => updateFurniture(e.target.value));
+      selector.addEventListener("change", (e) => updateSofa(e.target.value));
       roomScale.addEventListener("input", (e) => setRoomScale(e.target.value));
 
-      posX.addEventListener("input", applyFurnitureTransform);
-      posZ.addEventListener("input", applyFurnitureTransform);
-      rotY.addEventListener("input", applyFurnitureTransform);
-
-      resetBtn.addEventListener("click", resetFurnitureTransform);
-
-      // Init
       setRoomScale(roomScale.value);
-      resetFurnitureTransform();
-      updateFurniture("sofa1");
+      updateSofa("sofa1");
     });
   </script>
 </body>
