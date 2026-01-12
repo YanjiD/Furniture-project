@@ -1,186 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Furniture Experiment v12</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; background: #222; color: white; font-family: sans-serif; }
+        .scene-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        
+        #room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #sofa { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 
-  <style>
-    body {
-      margin: 0;
-      background-color: #444444;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      font-family: "Segoe UI", sans-serif;
-      color: white;
-    }
-
-    .viewer-container {
-      position: relative;
-      width: 100%;
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    model-viewer {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    #room-layer { position: absolute; inset: 0; z-index: 1; }
-    #sofa-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-
-    .controls {
-      background: #333;
-      padding: 16px 22px;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-      z-index: 10;
-      border-top: 1px solid #555;
-      display: grid;
-      gap: 14px;
-      grid-template-columns: 1fr;
-      justify-items: center;
-    }
-
-    .control-row {
-      width: min(720px, 95vw);
-      display: grid;
-      grid-template-columns: 180px 1fr 90px;
-      align-items: center;
-      gap: 12px;
-    }
-
-    label { font-size: 14px; font-weight: 700; }
-    select {
-      padding: 10px 14px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #555;
-      width: 320px;
-      cursor: pointer;
-      background: #fff;
-      color: #000;
-      justify-self: start;
-    }
-
-    input[type="range"] { width: 100%; }
-    .value-pill {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 6px 10px;
-      border-radius: 999px;
-    }
-  </style>
+        .dev-panel {
+            position: absolute; bottom: 10px; left: 10px; z-index: 100;
+            background: rgba(0,0,0,0.9); padding: 15px; border-radius: 8px; width: 320px;
+            max-height: 90vh; overflow-y: auto; border: 1px solid #777;
+        }
+        .info-panel {
+            position: absolute; top: 10px; left: 10px; z-index: 100;
+            background: rgba(0, 0, 100, 0.8); padding: 10px; border-radius: 5px; pointer-events: none;
+        }
+        input[type=range] { width: 100%; margin-bottom: 5px; cursor: pointer; }
+        label { font-size: 11px; color: #ccc; display: flex; justify-content: space-between; margin-top: 8px; }
+        .val { color: #0f0; font-weight: bold; }
+        select { width: 100%; padding: 8px; background: #333; color: white; margin-bottom: 10px; }
+    </style>
 </head>
-
 <body>
-  <div class="viewer-container">
-    <model-viewer
-      id="room-layer"
-      src="Room.glb"
-      camera-orbit="90deg 85deg 0.9m"
-      field-of-view="22deg"
-      disable-zoom
-      interaction-prompt="none"
-      exposure="1"
-      shadow-intensity="1">
+
+<div class="info-panel">
+    <b>📷 CAMERA ANGLE (LOCKED):</b><br>
+    <span style="color:cyan; font-family: monospace;">90deg 89deg 12.37m</span>
+</div>
+
+<div class="scene-wrapper">
+    <model-viewer id="room" 
+                  src="Room.glb" 
+                  camera-controls 
+                  disable-zoom 
+                  exposure="1" 
+                  shadow-intensity="1"
+                  camera-orbit="90deg 89deg 12.37m"
+                  min-camera-orbit="90deg 89deg 0m"
+                  max-camera-orbit="90deg 89deg 500m">
     </model-viewer>
-
-    <model-viewer
-      id="sofa-layer"
-      src="Sofa1.glb"
-      camera-orbit="90deg 85deg 0.9m"
-      field-of-view="22deg"
-      disable-zoom
-      interaction-prompt="none"
-      exposure="1"
-      shadow-intensity="1.5">
+    
+    <model-viewer id="sofa" 
+                  src="Sofa1.glb" 
+                  exposure="1" 
+                  camera-target="0m 0m 0m">
     </model-viewer>
-  </div>
+</div>
 
-  <div class="controls">
-    <div style="width:min(720px,95vw);">
-      <label for="config-select" style="display:block;margin-bottom:8px;">Select Furniture:</label>
-      <select id="config-select">
-        <option value="sofa1">Option 1: Orange 2-Seater</option>
-        <option value="sofa2">Option 2: White Armchair</option>
-        <option value="sofa4">Option 3: Cream Bench</option>
-        <option value="sofa5">Option 4: Brown Chesterfield</option>
-        <option value="sofa6">Option 5: Grey Sofa</option>
-      </select>
-    </div>
+<div class="dev-panel">
+    <h3>🛠️ Calibrator v8.2 (Expanded)</h3>
+    <label>SELECT SOFA:</label>
+    <select id="selector">
+        <option value="sofa1">Sofa 1</option>
+        <option value="sofa2">Sofa 2</option>
+        <option value="sofa4">Sofa 4</option>
+        <option value="sofa5">Sofa 5</option>
+        <option value="sofa6">Sofa 6</option>
+    </select>
 
-    <div class="control-row">
-      <label for="room-scale">Room Size</label>
-      <input id="room-scale" type="range" min="0.6" max="3.0" step="0.05" value="1.50" />
-      <div class="value-pill"><span id="room-scale-val">1.50</span>x</div>
-    </div>
+    <label style="color:orange">1. Rotation: <span id="val-rot" class="val">0 deg</span></label>
+    <input type="range" id="inp-rot" min="-180" max="180" step="1" value="0">
 
-    <div class="control-row">
-      <label for="zoom">Zoom</label>
-      <input id="zoom" type="range" min="0.5" max="2.0" step="0.02" value="0.85" />
-      <div class="value-pill"><span id="zoom-val">0.85</span>m</div>
-    </div>
-  </div>
+    <label>2. Size (Scale): <span id="val-scale" class="val">1.0</span></label>
+    <input type="range" id="inp-scale" min="0.0001" max="2.0" step="0.0001" value="1">
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", position: "39.5m 26.3m 26.3m" },
-        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", position: "79.6m 59.2m 65.8m" },
-        sofa4: { file: "Sofa4.glb", scale: "2 2 2", position: "0m 2m 0m" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", position: "434.2m 335.5m 335.5m" },
-        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", position: "39.5m 72.4m -6.6m" }
-      };
+    <label>3. Left/Right (X): <span id="val-x" class="val">0m</span></label>
+    <input type="range" id="inp-x" min="-1000" max="1000" step="0.1" value="0">
 
-      const room = document.getElementById("room-layer");
-      const sofa = document.getElementById("sofa-layer");
-      const selector = document.getElementById("config-select");
+    <label>Up/Down (Y): <span id="val-y" class="val">0m</span></label>
+    <input type="range" id="inp-y" min="-1000" max="1000" step="0.1" value="0">
+    
+    <label>Fwd/Back (Z): <span id="val-z" class="val">0m</span></label>
+    <input type="range" id="inp-z" min="-1000" max="1000" step="0.1" value="0">
 
-      const roomScale = document.getElementById("room-scale");
-      const roomScaleVal = document.getElementById("room-scale-val");
+    <label style="color:cyan; margin-top:15px; border-top:1px solid #555; padding-top:5px;">CAMERA ZOOM (Radius):</label>
+    <input type="range" id="inp-rad" min="0" max="50" step="0.1" value="12.37">
+</div>
 
-      const zoom = document.getElementById("zoom");
-      const zoomVal = document.getElementById("zoom-val");
+<script>
+    // --- PRE-FILLED DATA FROM YOUR SCREENSHOTS ---
+    const savedData = {
+        'sofa1': { file: 'Sofa1.glb', scale: 0.5724, x: 21.1, y: 24.3, z: 24.3, rot: 0 },
+        'sofa2': { file: 'Sofa2.glb', scale: 0.3488, x: 79.6, y: 46.1, z: 51.3, rot: 0 },
+        'sofa4': { file: 'Sofa4.glb', scale: 1.6382, x: 3.9, y: 2.0, z: 0.0, rot: 0 },
+        'sofa5': { file: 'Sofa5.glb', scale: 1.0, x: 0, y: 0, z: 0, rot: 0 }, // NEEDS FIXING
+        'sofa6': { file: 'Sofa6.glb', scale: 1.0, x: 0, y: 0, z: 0, rot: 0 }  // CHECK THIS ONE
+    };
 
-      function setRoomScale(scaleNum) {
-        const s = Number(scaleNum);
-        room.setAttribute("scale", `${s} ${s} ${s}`);
-        roomScaleVal.textContent = s.toFixed(2);
-      }
+    const room = document.querySelector('#room');
+    const sofa = document.querySelector('#sofa');
+    const inputs = {
+        sel: document.querySelector('#selector'),
+        rot: document.querySelector('#inp-rot'),
+        scale: document.querySelector('#inp-scale'),
+        x: document.querySelector('#inp-x'),
+        y: document.querySelector('#inp-y'),
+        z: document.querySelector('#inp-z'),
+        rad: document.querySelector('#inp-rad')
+    };
 
-      function setZoom(radiusMeters) {
-        const r = Number(radiusMeters);
-        const orbit = `90deg 85deg ${r}m`;
-        room.setAttribute("camera-orbit", orbit);
-        sofa.setAttribute("camera-orbit", orbit);
-        zoomVal.textContent = r.toFixed(2);
-      }
+    // Load Data Function
+    function loadSofa(key) {
+        const data = savedData[key];
+        sofa.src = data.file;
+        
+        // Update Sliders
+        inputs.scale.value = data.scale;
+        inputs.x.value = data.x;
+        inputs.y.value = data.y;
+        inputs.z.value = data.z;
+        inputs.rot.value = data.rot;
+        
+        update(); // Apply changes
+    }
 
-      function updateSofa(key) {
-        const data = sofaData[key];
-        if (!data) return;
+    function update() {
+        const s = inputs.scale.value;
+        const x = inputs.x.value; 
+        const y = inputs.y.value; 
+        const z = inputs.z.value;
+        const r = inputs.rot.value;
 
-        sofa.setAttribute("src", data.file);
-        sofa.setAttribute("scale", data.scale);
-        sofa.setAttribute("camera-target", data.position);
-      }
+        sofa.scale = ${s} ${s} ${s};
+        sofa.cameraTarget = ${x}m ${y}m ${z}m;
+        sofa.orientation = 0deg ${r}deg 0deg;
 
-      selector.addEventListener("change", (e) => updateSofa(e.target.value));
+        // Update Labels
+        document.querySelector('#val-scale').innerText = s;
+        document.querySelector('#val-x').innerText = x + 'm';
+        document.querySelector('#val-y').innerText = y + 'm';
+        document.querySelector('#val-z').innerText = z + 'm';
+        document.querySelector('#val-rot').innerText = r + ' deg';
+    }
 
-      roomScale.addEventListener("input", (e) => setRoomScale(e.target.value));
-      zoom.addEventListener("input", (e) => setZoom(e.target.value));
-
-      updateSofa("sofa1");
-      setRoomScale(roomScale.value);
-      setZoom(zoom.value);
+    // Sync Camera
+    room.addEventListener('camera-change', () => {
+        const orb = room.getCameraOrbit();
+        sofa.cameraOrbit = room.cameraOrbit; 
+        sofa.fieldOfView = room.fieldOfView;
+        document.getElementById('inp-rad').value = orb.radius.toFixed(2);
     });
-  </script>
+    
+    // Zoom Slider
+    inputs.rad.addEventListener('input', () => {
+        const currentOrbit = room.getCameraOrbit();
+        room.cameraOrbit = ${currentOrbit.theta}rad ${currentOrbit.phi}rad ${inputs.rad.value}m;
+    });
+
+    Object.values(inputs).forEach(el => el.addEventListener('input', update));
+    
+    // Handle Selector Change
+    inputs.sel.addEventListener('change', (e) => {
+        loadSofa(e.target.value);
+    });
+
+    // Initialize with Sofa 1
+    loadSofa('sofa1');
+</script>
 </body>
 </html>
