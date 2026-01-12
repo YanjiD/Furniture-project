@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Furniture Experiment v12</title>
+  <title>Furniture Experiment v13</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <style>
@@ -134,58 +134,3 @@
     </div>
 
     <div class="control-row">
-      <label for="room-scale">Room Size</label>
-      <input id="room-scale" type="range" min="0.6" max="3.0" step="0.05" value="2.25" />
-      <div class="value-pill"><span id="room-scale-val">2.25</span>x</div>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
-        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
-
-        /*
-          Option 3 fix:
-          - smaller scale
-          - camera-target moved "into the room" so the bench is in view
-          If it is still not centered, tweak the target values slightly (especially X and Y).
-        */
-        sofa4: { file: "Sofa4.glb", scale: "0.75 0.75 0.75", target: "0m 0.9m 2.2m" },
-
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
-        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
-      };
-
-      const room = document.getElementById("room-layer");
-      const sofa = document.getElementById("sofa-layer");
-      const selector = document.getElementById("config-select");
-
-      const roomScale = document.getElementById("room-scale");
-      const roomScaleVal = document.getElementById("room-scale-val");
-
-      function setRoomScale(scaleNum) {
-        const s = Number(scaleNum);
-        room.setAttribute("scale", `${s} ${s} ${s}`);
-        roomScaleVal.textContent = s.toFixed(2);
-      }
-
-      function updateSofa(key) {
-        const data = sofaData[key];
-        if (!data) return;
-
-        sofa.setAttribute("src", data.file);
-        sofa.setAttribute("scale", data.scale);
-        sofa.setAttribute("camera-target", data.target);
-      }
-
-      selector.addEventListener("change", (e) => updateSofa(e.target.value));
-      roomScale.addEventListener("input", (e) => setRoomScale(e.target.value));
-
-      setRoomScale(roomScale.value);
-      updateSofa("sofa1");
-    });
-  </script>
-</body>
-</html>
