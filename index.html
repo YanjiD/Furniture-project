@@ -1,107 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Furniture Experiment v11</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    
-    <style>
-        /* Dark Grey Background */
-        body { margin: 0; background-color: #444444; display: flex; flex-direction: column; height: 100vh; font-family: 'Segoe UI', sans-serif; color: white; }
-        .viewer-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; }
-        
-        /* Layer 1: The Room (Background) */
-        #room-layer { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; 
-        }
-        
-        /* Layer 2: The Sofa (Foreground) */
-        #sofa-layer { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; 
-            pointer-events: none; /* Allows clicks to pass through */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Furniture Experiment v11</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
-        .controls { 
-            background: #333; padding: 25px; text-align: center; 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5); z-index: 10;
-            display: flex; flex-direction: column; align-items: center; gap: 15px; border-top: 1px solid #555;
-        }
-        select { padding: 12px 20px; font-size: 16px; border-radius: 8px; border: 1px solid #555; width: 300px; cursor: pointer; background: #fff; color: #000; }
-        label { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 5px; display: block; }
-    </style>
-</head>
-<body>
-
-<div class="viewer-container">
-    <model-viewer id="room-layer" 
-                  src="Room.glb" 
-                  camera-orbit="90deg 89deg 1.5m" 
-                  field-of-view="35deg"
-                  min-camera-orbit="auto auto auto"
-                  max-camera-orbit="auto auto auto"
-                  disable-zoom 
-                  interaction-prompt="none"
-                  exposure="1" 
-                  shadow-intensity="1">
-    </model-viewer>
-    
-    <model-viewer id="sofa-layer" 
-                  src="Sofa1.glb" 
-                  camera-orbit="90deg 89deg 1.5m"
-                  field-of-view="35deg"
-                  exposure="1" 
-                  shadow-intensity="1.5">
-    </model-viewer>
-</div>
-
-<div class="controls">
-    <div>
-        <label for="config-select">Select Furniture:</label>
-        <select id="config-select">
-            <option value="sofa1">Option 1: Orange 2-Seater</option>
-            <option value="sofa2">Option 2: White Armchair</option>
-            <option value="sofa4">Option 3: Cream Bench</option>
-            <option value="sofa5">Option 4: Brown Chesterfield</option>
-            <option value="sofa6">Option 5: Grey Sofa</option>
-        </select>
-    </div>
-</div>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    // --- FINAL DATA ---
-    const sofaData = {
-        'sofa1': { file: 'Sofa1.glb', scale: '0.5724 0.5724 0.5724', position: '39.5m 26.3m 26.3m' },
-        'sofa2': { file: 'Sofa2.glb', scale: '0.3685 0.3685 0.3685', position: '79.6m 59.2m 65.8m' },
-        'sofa4': { file: 'Sofa4.glb', scale: '2 2 2', position: '0m 2m 0m' },
-        'sofa5': { file: 'Sofa5.glb', scale: '0.5659 0.5659 0.5659', position: '434.2m 335.5m 335.5m' },
-        'sofa6': { file: 'Sofa6.glb', scale: '0.4738 0.4738 0.4738', position: '39.5m 72.4m -6.6m' }
-    };
-
-    const sofa = document.getElementById('sofa-layer');
-    const selector = document.getElementById('config-select');
-
-    // Safe Update Function
-    function updateSofa(key) {
-        if (!sofaData[key]) return;
-        const data = sofaData[key];
-        
-        // Use setAttribute for reliability
-        sofa.setAttribute('src', data.file);
-        sofa.setAttribute('scale', data.scale);
-        sofa.setAttribute('camera-target', data.position);
+  <style>
+    body {
+      margin: 0;
+      background-color: #444444;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-family: "Segoe UI", sans-serif;
+      color: white;
     }
 
-    // Event Listener
-    selector.addEventListener('change', (e) => {
-        updateSofa(e.target.value);
+    .viewer-container {
+      position: relative;
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: 0; /* important for flex children to actually shrink/grow */
+      overflow: hidden;
+    }
+
+    /* Make sure model-viewer actually occupies the full container */
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #room-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #sofa-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .controls {
+      background: #333;
+      padding: 18px 25px;
+      text-align: center;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid #555;
+      flex: 0 0 auto;
+    }
+
+    select {
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      width: 300px;
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+    }
+
+    label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 5px;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="viewer-container">
+    <model-viewer
+      id="room-layer"
+      src="Room.glb"
+      camera-orbit="90deg 85deg 0.9m"
+      field-of-view="22deg"
+      disable-zoom
+      interaction-prompt="none"
+      exposure="1"
+      shadow-intensity="1">
+    </model-viewer>
+
+    <model-viewer
+      id="sofa-layer"
+      src="Sofa1.glb"
+      camera-orbit="90deg 85deg 0.9m"
+      field-of-view="22deg"
+      disable-zoom
+      interaction-prompt="none"
+      exposure="1"
+      shadow-intensity="1.5">
+    </model-viewer>
+  </div>
+
+  <div class="controls">
+    <div>
+      <label for="config-select">Select Furniture:</label>
+      <select id="config-select">
+        <option value="sofa1">Option 1: Orange 2-Seater</option>
+        <option value="sofa2">Option 2: White Armchair</option>
+        <option value="sofa4">Option 3: Cream Bench</option>
+        <option value="sofa5">Option 4: Brown Chesterfield</option>
+        <option value="sofa6">Option 5: Grey Sofa</option>
+      </select>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sofaData = {
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", position: "39.5m 26.3m 26.3m" },
+        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", position: "79.6m 59.2m 65.8m" },
+        sofa4: { file: "Sofa4.glb", scale: "2 2 2", position: "0m 2m 0m" },
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", position: "434.2m 335.5m 335.5m" },
+        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", position: "39.5m 72.4m -6.6m" }
+      };
+
+      const sofa = document.getElementById("sofa-layer");
+      const selector = document.getElementById("config-select");
+
+      function updateSofa(key) {
+        const data = sofaData[key];
+        if (!data) return;
+
+        sofa.setAttribute("src", data.file);
+        sofa.setAttribute("scale", data.scale);
+        sofa.setAttribute("camera-target", data.position);
+      }
+
+      selector.addEventListener("change", (e) => updateSofa(e.target.value));
+      updateSofa("sofa1");
     });
-
-    // Initialize
-    updateSofa('sofa1');
-});
-</script>
-
+  </script>
 </body>
 </html>
