@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sofa Product Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:#ffffff;
+      color:#111;
+    }
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      padding:0 20px;
+    }
+    .product{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap:30px;
+    }
+    img{
+      width:100%;
+      display:block;
+      border-radius:6px;
+    }
+    .thumbs{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+      margin-top:12px;
+    }
+    h1{
+      font-size:24px;
+      margin:0 0 8px;
+    }
+    .price{
+      font-size:20px;
+      margin:10px 0;
+    }
+    .desc{
+      font-size:14px;
+      line-height:1.5;
+      margin:14px 0;
+      color:#333;
+    }
+    .specs{
+      font-size:14px;
+      line-height:1.6;
+      margin-top:12px;
+    }
+    .specs li{
+      margin-bottom:6px;
+    }
+    .button{
+      margin-top:18px;
+      padding:12px;
+      width:100%;
+      background:#111;
+      color:#fff;
+      border:none;
+      font-size:14px;
+      cursor:pointer;
+    }
+    @media(max-width:900px){
+      .product{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="product">
+
+      <div>
+        <img id="mainImage" src="environment.jpg" alt="Sofa image">
+
+        <div class="thumbs">
+          <img src="environment.jpg" onclick="changeImg(this.src)">
+          <img src="main.png" onclick="changeImg(this.src)">
+          <img src="side.jpg" onclick="changeImg(this.src)">
+          <img src="fabric.png" onclick="changeImg(this.src)">
+        </div>
+      </div>
+
+      <div>
+        <h1>Landon Sofa</h1>
+        <div class="price">$1,299</div>
+
+        <p class="desc">
+          A modern upholstered sofa designed for everyday comfort.
+          Features a durable fabric finish, supportive cushions, and a
+          solid wood frame.
+        </p>
+
+        <ul class="specs">
+          <li><strong>Width:</strong> 84 inches</li>
+          <li><strong>Depth:</strong> 38 inches</li>
+          <li><strong>Height:</strong> 33 inches</li>
+          <li><strong>Upholstery:</strong> Performance fabric</li>
+          <li><strong>Frame:</strong> Solid and engineered wood</li>
+        </ul>
+
+        <button class="button">Add to Cart</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function changeImg(src){
+      document.getElementById("mainImage").src = src;
+    }
+  </script>
+</body>
+</html>
