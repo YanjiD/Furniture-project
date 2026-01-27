@@ -129,6 +129,8 @@
         <option value="sofa2">Option 2: White Armchair</option>
         <option value="sofa5">Option 3: Brown Chesterfield</option>
         <option value="sofa6">Option 4: Grey Sofa</option>
+        <option value="sofa7">Option 5: Sofa 7</option>
+        <option value="sofa8">Option 6: Sofa 8</option>
       </select>
     </div>
 
@@ -145,7 +147,13 @@
         sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
         sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
         sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
-        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
+
+        /* Sofa6 removed from the previous room configuration; still available in selection */
+        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" },
+
+        /* Added sofas */
+        sofa7: { file: "Sofa7.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" },
+        sofa8: { file: "Sofa8.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
       };
 
       const room = document.getElementById("room-layer");
