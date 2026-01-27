@@ -128,7 +128,11 @@
         <option value="sofa1">Option 1: Orange 2-Seater</option>
         <option value="sofa2">Option 2: White Armchair</option>
         <option value="sofa5">Option 3: Brown Chesterfield</option>
-        <option value="sofa6">Option 4: Grey Sofa</option>
+
+        <option value="sofa6">Option 4: Sofa 6</option>
+        <option value="sofa7">Option 5: Sofa 7</option>
+        <option value="sofa8">Option 6: Sofa 8</option>
+        <option value="sofa9">Option 7: Sofa 9</option>
       </select>
     </div>
 
@@ -141,11 +145,24 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // Note: camera-target only affects where the camera looks.
+      // It does NOT move the sofa model within the room.
+      // These defaults are set to make it easy to compare by keeping the same framing.
+
+      const TARGET_LEFT = "39.5m 26.3m 26.3m";          // Option 1 framing
+      const TARGET_RIGHT = "434.2m 335.5m 335.5m";      // Option 3 framing
+
       const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: TARGET_LEFT },
         sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
-        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
+
+        // Newly downloaded replacements. Start with Option 3 framing and a conservative scale.
+        // If any looks too big or too small, adjust ONLY that one scale number.
+        sofa6: { file: "Sofa6.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
+        sofa7: { file: "Sofa7.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
+        sofa8: { file: "Sofa8.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
+        sofa9: { file: "Sofa9.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT }
       };
 
       const room = document.getElementById("room-layer");
