@@ -93,15 +93,6 @@
       padding: 6px 10px;
       border-radius: 999px;
     }
-
-    #status {
-      width: min(720px, 95vw);
-      font-size: 12px;
-      opacity: 0.95;
-      line-height: 1.3;
-      color: #fff;
-      white-space: pre-wrap;
-    }
   </style>
 </head>
 
@@ -146,8 +137,6 @@
       <input id="room-scale" type="range" min="0.6" max="5.0" step="0.05" value="2.25" />
       <div class="value-pill"><span id="room-scale-val">2.25</span>x</div>
     </div>
-
-    <div id="status">Status: Ready</div>
   </div>
 
   <script>
@@ -157,8 +146,8 @@
         sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
         sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
 
-        /* White sofa: made smaller again */
-        sofa6: { file: "Sofa6.glb", scale: "0.4500 0.4500 0.4500", target: "434.2m 335.5m 335.5m" }
+        /* White sofa: reduce further */
+        sofa6: { file: "Sofa6.glb", scale: "0.3800 0.3800 0.3800", target: "434.2m 335.5m 335.5m" }
       };
 
       const room = document.getElementById("room-layer");
@@ -167,7 +156,6 @@
 
       const roomScale = document.getElementById("room-scale");
       const roomScaleVal = document.getElementById("room-scale-val");
-      const status = document.getElementById("status");
 
       function setRoomScale(scaleNum) {
         const s = Number(scaleNum);
@@ -175,37 +163,11 @@
         roomScaleVal.textContent = s.toFixed(2);
       }
 
-      function updateStatus(msg) {
-        status.textContent = msg;
-      }
-
       function updateSofa(key) {
         const data = sofaData[key];
         if (!data) return;
 
-        const filePath = `./${data.file}`;
-        updateStatus(`Status: Loading ${filePath}`);
-
-        const onLoad = () => {
-          updateStatus(`Status: Loaded ${filePath}`);
-          sofa.removeEventListener("load", onLoad);
-          sofa.removeEventListener("error", onError);
-        };
-
-        const onError = () => {
-          updateStatus(
-            `Status: ERROR loading ${filePath}\n` +
-            `Check that the file exists in the same folder as this HTML.\n` +
-            `Also check exact spelling and capitalization.`
-          );
-          sofa.removeEventListener("load", onLoad);
-          sofa.removeEventListener("error", onError);
-        };
-
-        sofa.addEventListener("load", onLoad);
-        sofa.addEventListener("error", onError);
-
-        sofa.setAttribute("src", filePath);
+        sofa.setAttribute("src", `./${data.file}`);
         sofa.setAttribute("scale", data.scale);
         sofa.setAttribute("camera-target", data.target);
       }
