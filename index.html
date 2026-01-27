@@ -93,6 +93,15 @@
       padding: 6px 10px;
       border-radius: 999px;
     }
+
+    #status {
+      width: min(720px, 95vw);
+      font-size: 12px;
+      opacity: 0.95;
+      line-height: 1.3;
+      color: #fff;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 
@@ -100,7 +109,7 @@
   <div class="viewer-container">
     <model-viewer
       id="room-layer"
-      src="Room.glb"
+      src="./Room.glb"
       camera-orbit="90deg 85deg 0.9m"
       field-of-view="22deg"
       disable-zoom
@@ -111,7 +120,7 @@
 
     <model-viewer
       id="sofa-layer"
-      src="Sofa1.glb"
+      src="./Sofa1.glb"
       camera-orbit="90deg 85deg 0.9m"
       field-of-view="22deg"
       disable-zoom
@@ -141,28 +150,21 @@
       <input id="room-scale" type="range" min="0.6" max="5.0" step="0.05" value="2.25" />
       <div class="value-pill"><span id="room-scale-val">2.25</span>x</div>
     </div>
+
+    <div id="status">Status: Ready</div>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Note: camera-target only affects where the camera looks.
-      // It does NOT move the sofa model within the room.
-      // These defaults are set to make it easy to compare by keeping the same framing.
-
-      const TARGET_LEFT = "39.5m 26.3m 26.3m";          // Option 1 framing
-      const TARGET_RIGHT = "434.2m 335.5m 335.5m";      // Option 3 framing
-
       const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: TARGET_LEFT },
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
         sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
 
-        // Newly downloaded replacements. Start with Option 3 framing and a conservative scale.
-        // If any looks too big or too small, adjust ONLY that one scale number.
-        sofa6: { file: "Sofa6.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
-        sofa7: { file: "Sofa7.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
-        sofa8: { file: "Sofa8.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT },
-        sofa9: { file: "Sofa9.glb", scale: "0.5659 0.5659 0.5659", target: TARGET_RIGHT }
+        sofa6: { file: "Sofa6.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa7: { file: "Sofa7.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa8: { file: "Sofa8.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa9: { file: "Sofa9.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" }
       };
 
       const room = document.getElementById("room-layer");
@@ -171,6 +173,7 @@
 
       const roomScale = document.getElementById("room-scale");
       const roomScaleVal = document.getElementById("room-scale-val");
+      const status = document.getElementById("status");
 
       function setRoomScale(scaleNum) {
         const s = Number(scaleNum);
@@ -178,11 +181,37 @@
         roomScaleVal.textContent = s.toFixed(2);
       }
 
+      function updateStatus(msg) {
+        status.textContent = msg;
+      }
+
       function updateSofa(key) {
         const data = sofaData[key];
         if (!data) return;
 
-        sofa.setAttribute("src", data.file);
+        const filePath = `./${data.file}`;
+        updateStatus(`Status: Loading ${filePath}`);
+
+        const onLoad = () => {
+          updateStatus(`Status: Loaded ${filePath}`);
+          sofa.removeEventListener("load", onLoad);
+          sofa.removeEventListener("error", onError);
+        };
+
+        const onError = () => {
+          updateStatus(
+            `Status: ERROR loading ${filePath}\n` +
+            `Check that the file exists in the same folder as this HTML.\n` +
+            `Also check exact spelling and capitalization.`
+          );
+          sofa.removeEventListener("load", onLoad);
+          sofa.removeEventListener("error", onError);
+        };
+
+        sofa.addEventListener("load", onLoad);
+        sofa.addEventListener("error", onError);
+
+        sofa.setAttribute("src", filePath);
         sofa.setAttribute("scale", data.scale);
         sofa.setAttribute("camera-target", data.target);
       }
