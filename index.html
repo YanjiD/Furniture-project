@@ -16,7 +16,6 @@
       font-family: "Segoe UI", sans-serif;
       color: white;
     }
-
     .viewer-container {
       position: relative;
       width: 100%;
@@ -24,25 +23,9 @@
       min-height: 0;
       overflow: hidden;
     }
-
-    model-viewer {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    #room-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-    }
-
-    #sofa-layer {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-    }
+    model-viewer { width: 100%; height: 100%; display: block; }
+    #room-layer { position: absolute; inset: 0; z-index: 1; }
+    #sofa-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
     .controls {
       background: #333;
@@ -55,7 +38,6 @@
       grid-template-columns: 1fr;
       justify-items: center;
     }
-
     .control-row {
       width: min(720px, 95vw);
       display: grid;
@@ -63,12 +45,7 @@
       align-items: center;
       gap: 12px;
     }
-
-    label {
-      font-size: 14px;
-      font-weight: 700;
-    }
-
+    label { font-size: 14px; font-weight: 700; }
     select {
       padding: 10px 14px;
       font-size: 16px;
@@ -80,11 +57,7 @@
       color: #000;
       justify-self: start;
     }
-
-    input[type="range"] {
-      width: 100%;
-    }
-
+    input[type="range"] { width: 100%; }
     .value-pill {
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -143,19 +116,22 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const OPTION1_TARGET = "39.5m 26.3m 26.3m"; // same camera-target as Option 1
+      const DEBUG = true; // set to false after calibration
 
       const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: OPTION1_TARGET },
-        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724" },
+        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685" },
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659" },
 
-        // Moved to same camera-target as Options 1 to 3, and auto-scaled to match Option 1 size
-        sofa6: { file: "Sofa6.glb", target: OPTION1_TARGET, matchOption1Size: true },
+        // Start conservative: match Sofa1 scale, then adjust down if still large
+        sofa6: { file: "Sofa6.glb", scale: "0.5724 0.5724 0.5724" },
 
-        // Added sofas, placed like Option 1 via camera-target, and auto-scaled to match Option 1 size
-        sofa7: { file: "Sofa7.glb", target: OPTION1_TARGET, matchOption1Size: true },
-        sofa8: { file: "Sofa8.glb", target: OPTION1_TARGET, matchOption1Size: true }
+        // You said Option 7 is too big, so reduce more
+        sofa7: { file: "Sofa7.glb", scale: "0.3500 0.3500 0.3500" },
+
+        // You said Pink sofa disappears; that is often because it became too small.
+        // Use a moderate scale instead of auto-scaling to near-zero.
+        sofa8: { file: "Sofa8.glb", scale: "0.3000 0.3000 0.3000" }
       };
 
       const room = document.getElementById("room-layer");
@@ -165,83 +141,6 @@
       const roomScale = document.getElementById("room-scale");
       const roomScaleVal = document.getElementById("room-scale-val");
 
-      let option1ModelMaxDim = null;
-      let option1UniformScale = null;
-
-      function parseUniformScale(scaleStr) {
-        if (!scaleStr) return null;
-        const parts = scaleStr.trim().split(/\s+/).map(Number);
-        if (parts.length !== 3 || parts.some((v) => Number.isNaN(v))) return null;
-        if (parts[0] !== parts[1] || parts[1] !== parts[2]) return null;
-        return parts[0];
-      }
-
-      function maxDim(dims) {
-        if (!dims) return null;
-        const { x, y, z } = dims;
-        if ([x, y, z].some((v) => typeof v !== "number" || Number.isNaN(v))) return null;
-        return Math.max(x, y, z);
-      }
-
       function setRoomScale(scaleNum) {
         const s = Number(scaleNum);
         room.setAttribute("scale", `${s} ${s} ${s}`);
-        roomScaleVal.textContent = s.toFixed(2);
-      }
-
-      function updateSofa(key) {
-        const data = sofaData[key];
-        if (!data) return;
-
-        sofa.setAttribute("src", data.file);
-
-        if (data.target) sofa.setAttribute("camera-target", data.target);
-
-        // If this option has an explicit scale, use it (and do not auto-scale).
-        if (data.scale) {
-          sofa.setAttribute("scale", data.scale);
-          return;
-        }
-
-        // Otherwise, auto-scale to match Option 1 size when requested.
-        if (data.matchOption1Size) {
-          sofa.addEventListener(
-            "load",
-            () => {
-              if (option1ModelMaxDim == null || option1UniformScale == null) return;
-
-              const dims = sofa.getDimensions(); // bounding box dimensions in meters :contentReference[oaicite:1]{index=1}
-              const modelMax = maxDim(dims);
-              if (modelMax == null || modelMax === 0) return;
-
-              const desiredDisplayedMax = option1ModelMaxDim * option1UniformScale;
-              const newScale = desiredDisplayedMax / modelMax;
-
-              sofa.setAttribute("scale", `${newScale} ${newScale} ${newScale}`);
-            },
-            { once: true }
-          );
-        }
-      }
-
-      // Capture Option 1 reference size after initial Sofa1.glb loads
-      sofa.addEventListener("load", () => {
-        const dims = sofa.getDimensions(); // meters :contentReference[oaicite:2]{index=2}
-        option1ModelMaxDim = maxDim(dims);
-
-        const s1 = parseUniformScale(sofaData.sofa1.scale);
-        option1UniformScale = s1;
-
-        // Ensure Option 1 starts with its original scale
-        if (sofaData.sofa1.scale) sofa.setAttribute("scale", sofaData.sofa1.scale);
-      }, { once: true });
-
-      selector.addEventListener("change", (e) => updateSofa(e.target.value));
-      roomScale.addEventListener("input", (e) => setRoomScale(e.target.value));
-
-      setRoomScale(roomScale.value);
-      updateSofa("sofa1");
-    });
-  </script>
-</body>
-</html>
