@@ -16,6 +16,7 @@
       font-family: "Segoe UI", sans-serif;
       color: white;
     }
+
     .viewer-container {
       position: relative;
       width: 100%;
@@ -23,9 +24,25 @@
       min-height: 0;
       overflow: hidden;
     }
-    model-viewer { width: 100%; height: 100%; display: block; }
-    #room-layer { position: absolute; inset: 0; z-index: 1; }
-    #sofa-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #room-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    #sofa-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
 
     .controls {
       background: #333;
@@ -38,6 +55,7 @@
       grid-template-columns: 1fr;
       justify-items: center;
     }
+
     .control-row {
       width: min(720px, 95vw);
       display: grid;
@@ -45,7 +63,12 @@
       align-items: center;
       gap: 12px;
     }
-    label { font-size: 14px; font-weight: 700; }
+
+    label {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
     select {
       padding: 10px 14px;
       font-size: 16px;
@@ -57,7 +80,11 @@
       color: #000;
       justify-self: start;
     }
-    input[type="range"] { width: 100%; }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
     .value-pill {
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -102,8 +129,6 @@
         <option value="sofa2">Option 2: White Armchair</option>
         <option value="sofa5">Option 3: Brown Chesterfield</option>
         <option value="sofa6">Option 4: Grey Sofa</option>
-        <option value="sofa7">Option 5: White Sofa</option>
-        <option value="sofa8">Option 6: Pink Sofa</option>
       </select>
     </div>
 
@@ -116,22 +141,11 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const DEBUG = true; // set to false after calibration
-
       const sofaData = {
-        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724" },
-        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685" },
-        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659" },
-
-        // Start conservative: match Sofa1 scale, then adjust down if still large
-        sofa6: { file: "Sofa6.glb", scale: "0.5724 0.5724 0.5724" },
-
-        // You said Option 7 is too big, so reduce more
-        sofa7: { file: "Sofa7.glb", scale: "0.3500 0.3500 0.3500" },
-
-        // You said Pink sofa disappears; that is often because it became too small.
-        // Use a moderate scale instead of auto-scaling to near-zero.
-        sofa8: { file: "Sofa8.glb", scale: "0.3000 0.3000 0.3000" }
+        sofa1: { file: "Sofa1.glb", scale: "0.5724 0.5724 0.5724", target: "39.5m 26.3m 26.3m" },
+        sofa2: { file: "Sofa2.glb", scale: "0.3685 0.3685 0.3685", target: "79.6m 59.2m 65.8m" },
+        sofa5: { file: "Sofa5.glb", scale: "0.5659 0.5659 0.5659", target: "434.2m 335.5m 335.5m" },
+        sofa6: { file: "Sofa6.glb", scale: "0.4738 0.4738 0.4738", target: "39.5m 72.4m -6.6m" }
       };
 
       const room = document.getElementById("room-layer");
@@ -144,3 +158,24 @@
       function setRoomScale(scaleNum) {
         const s = Number(scaleNum);
         room.setAttribute("scale", `${s} ${s} ${s}`);
+        roomScaleVal.textContent = s.toFixed(2);
+      }
+
+      function updateSofa(key) {
+        const data = sofaData[key];
+        if (!data) return;
+
+        sofa.setAttribute("src", data.file);
+        sofa.setAttribute("scale", data.scale);
+        sofa.setAttribute("camera-target", data.target);
+      }
+
+      selector.addEventListener("change", (e) => updateSofa(e.target.value));
+      roomScale.addEventListener("input", (e) => setRoomScale(e.target.value));
+
+      setRoomScale(roomScale.value);
+      updateSofa("sofa1");
+    });
+  </script>
+</body>
+</html>
